@@ -1,0 +1,55 @@
+<launch>
+    
+  <!-- RESET ODOMETRY -->
+  <node pkg="rostopic" type="rostopic" name="reset_odom" args="pub /mobile_base/commands/reset_odometry std_msgs/Empty"/>
+    
+    
+  <!-- TF BROADCASTER -->
+  <node pkg="tf" type="static_transform_publisher" name="base_tf_publisher" args="0.0 0.0 0.0 0.0 0.0 0.0 0.0 base_footprint base_link 100" />
+
+    
+    
+  <!-- MAP SERVER -->
+  <!-- Map of the environment -->
+  <arg name="map_file" default="$(find turtlebot_visual_navigation)/map/aip_map.yaml"/>
+  <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)" />
+  <!-- Markers positions on the map -->
+  <node pkg="tf" type="static_transform_publisher" name="marker_tf_publisher_1" args="4.70 4.44 0.31 0.0 -0.707 0.0 0.707 map marker_0 100" />
+  <node pkg="tf" type="static_transform_publisher" name="marker_tf_publisher_0" args="0.53 1.28 0.31 -0.5 -0.5 -0.5 0.5 map marker_1 100" />
+  <!-- Visibility map -->
+  <node name="common_map" pkg="map_server" type="map_server" args="$(find turtlebot_visual_navigation)/map/visib.yaml">
+    <remap from="map" to="/markers_visibility_map" />
+  </node>
+  
+
+  <!-- MOVE BASE -->
+  <include file="$(find turtlebot_visual_navigation)/launch/includes/move_base.launch.xml">
+    <!--<arg name="custom_param_file" value="$(arg custom_param_file)"/> -->
+  </include>
+    
+    
+
+	<arg name="marker_size" default="20" />
+	<arg name="max_new_marker_error" default="0.08" />
+	<arg name="max_track_error" default="0.2" />
+
+	<arg name="cam_image_topic" default="/camera/depth_registered/points" />
+	<arg name="cam_info_topic" default="/camera/depth_registered/camera_info" />
+	<arg name="output_frame" default="/camera_rgb_optical_frame" />
+
+	<node name="ar_track_alvar" pkg="ar_track_alvar" type="individualMarkers" respawn="false" output="screen">
+		<param name="marker_size"           type="double" value="$(arg marker_size)" />
+		<param name="max_new_marker_error"  type="double" value="$(arg max_new_marker_error)" />
+		<param name="max_track_error"       type="double" value="$(arg max_track_error)" />
+		<param name="output_frame"          type="string" value="$(arg output_frame)" />
+
+		<remap from="camera_image"  to="$(arg cam_image_topic)" />
+		<remap from="camera_info"   to="$(arg cam_info_topic)" />
+	</node>
+
+
+  <!-- RVIZ CONFIGURATION -->
+  <node pkg="rviz" type="rviz" name="rviz" args="-d $(find turtlebot_visual_navigation)/config/localisation.rviz" />
+
+</launch>
+
