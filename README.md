@@ -3,12 +3,14 @@ Version 2.0 for TurtleBot Project
 
 -VERSION LINUX: Ubuntu 14.04  
 
-Installation:
+#Installation:
+
 	$ cd [link catkin_workspace]/src
 	$ git clone https://github.com/Projet-M2-TurtleBot-UPS/turtlebot_visual_navigation.git
 
 
-Start:
+#Start:
+
 	$ cd [link catkin_workspace]
 	$ catkin_make
 
