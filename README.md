@@ -1,7 +1,7 @@
 # turtlebot_visual_navigation
 Version 2.0 for TurtleBot Project
 
--VERSION LINUX: <p style='color:red'> Ubuntu 14.04 </p>  
+-VERSION LINUX: Ubuntu 14.04 
 
 #Installation:
 
