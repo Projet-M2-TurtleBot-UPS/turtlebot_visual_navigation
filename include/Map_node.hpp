@@ -33,6 +33,7 @@ class Map_node
 
 		// Constructor
 		Map_node(ros::NodeHandle nh);
+		Map_node(){};
 
 		//Destructor
 		~Map_node();
@@ -42,6 +43,8 @@ class Map_node
 		std::vector<int> pose_to_pix(float x_pos,float y_pos);
 		std::vector<float> pix_to_pose(int x_pix,int y_pix);
 		bool is_intersection (std::vector<float> start, std::vector<float> end);
+		bool is_intersection (std::vector<int> start, std::vector<int> end);
+		bool is_Location_Ok(int x, int y, int dim);
 
 		// Map_Modifier
 		void update_Map();
@@ -56,6 +59,7 @@ class Map_node
 		float get_Position_Origin_Map(int axe);
 		float get_Orientation_Origin_Map(int axe);
 		int get_Val_Pix_Map(int x,int y);
+		int get_Size_Map();
 
 		// DEBUG MOD
 		void write_BMP ();

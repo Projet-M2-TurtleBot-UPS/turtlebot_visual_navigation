@@ -18,7 +18,6 @@ Map_node::Map_node(ros::NodeHandle nh)
 	pub_OccGrid_ = nh_.advertise<nav_msgs::OccupancyGrid>("map",10);
 	pose_.resize(3);
 	orientation_.resize(4);
-
 }
 
 // Destructor
@@ -146,6 +145,59 @@ bool Map_node::is_intersection (std::vector<float> start, std::vector<float> end
 }
 
 
+// Is_Intersection
+// Check if there isn't obstacle between start and end
+// start:	Position of start (x,y,z) in m
+// end:		Position of end (x,y,z) in m
+bool Map_node::is_intersection (std::vector<int> start, std::vector<int> end)
+{
+	std::vector<int> pix;
+	//Find the direction's vector
+	float diff_x=((float)end[0]-(float)start[0]);
+	float diff_y=((float)end[1]-(float)start[1]);
+	float dist = sqrt(diff_x*diff_x + diff_y*diff_y);
+	float dir_x = diff_x/dist;
+	float dir_y = diff_y/dist;
+
+	//Resize the direction's vector
+	dir_x *= (resolution_/2.0f);
+	dir_y *= (resolution_/2.0f);
+
+	//Verifacation 
+	int pos_x=start[0];
+	int pos_y=start[1];
+	while((pos_x<end[0]-resolution_ || pos_x>end[0]+resolution_) ||
+		  (pos_y<end[1]-resolution_ || pos_y>end[1]+resolution_))
+	{
+		if(100 == get_Val_Pix_Map(pos_x,pos_y))
+			return true;
+		pos_x+=dir_x;
+		pos_y+=dir_y;
+	}
+
+	return false;
+}
+
+
+
+
+
+// Is_Location_Ok
+// Check if pixels around the input pixel are ok
+// x: position in x of the input pixel
+// y: position in y of the input pixel
+// dim: radius of the filter centered on the input pixel
+bool Map_node::is_Location_Ok(int x, int y, int dim){
+	for(int i=x-dim; i<x+dim; ++i)
+		for(int j=y-dim; j<y+dim; ++j)
+			if(x>=0 && y>=0 && x<width_ && y<height_)
+				if(map_data_[j*width_+i] == 100 || map_data_[j*width_+i] == -1)
+					return false;
+	return true;
+}
+
+
+
 
 
 // Update_Map
@@ -244,12 +296,14 @@ float Map_node::get_Orientation_Origin_Map(int axe)
 	return orientation_[axe];
 }
 
-int Map_node::get_Val_Pix_Map(int x,int y)
-{
+int Map_node::get_Val_Pix_Map(int x,int y){
 	int id= (y*width_)+x;
 	return map_data_[id];
 }
 
+int Map_node::get_Size_Map(){
+	map_data_.size();
+}
 
 
 // DEBUG MOD

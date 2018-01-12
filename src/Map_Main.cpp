@@ -3,6 +3,10 @@
 # include "Map_node.hpp"
 # include "Line.hpp"
 # include "Image_processing.hpp"
+# include "Point_Cloud.hpp"
+
+# define VISIBILITY 20
+# define NB_ERR_CONS 5000
 
 int main(int argc, char **argv)
 {
@@ -11,6 +15,7 @@ int main(int argc, char **argv)
 	Map_node node(nh);
 	Map_Gui mapgui(nh);
 	vector<Target> list_Target;
+	vector<Target> list_Markers;
 	ros::Rate loop_rate(2);
 	int id_curr = 6;
 	
@@ -56,13 +61,18 @@ int main(int argc, char **argv)
 	color2.push_back(0.0);
 
 	list_Target.push_back(Target(0,1,position,orientation));
-	list_Target.push_back(Target(1,2,position1,orientation));
-	list_Target.push_back(Target(2,2,position2,orientation));
+	list_Markers.push_back(Target(0,2,position1,orientation));
+	list_Markers.push_back(Target(1,2,position2,orientation));
 	list_Target.push_back(Target(3,0,position3,orientation));
 	list_Target.push_back(Target(4,0,position4,orientation));
 	list_Target.push_back(Target(5,0,position5,orientation));
-	
+	 
 	//create_Filter_Turtlebot2(0.354f,0.05f);
+
+	vector<float> start_point;
+	start_point.push_back(-3.0f);
+	start_point.push_back(5.0f);
+	start_point.push_back(0.0f);
 
 	while(ros::ok())
 	{
@@ -73,6 +83,8 @@ int main(int argc, char **argv)
 			node.open_Map(2);
 			node.dilate_Map();
 			node.update_Map();
+			Point_Cloud p_C = Point_Cloud(node, list_Markers, start_point, VISIBILITY, NB_ERR_CONS);
+			list_Target = p_C.create_Point_Cloud();
 			for(int i=0;i<list_Target.size();i++)
 			{
 				mapgui.add_Object(list_Target[i].create_MSG_Marker());
@@ -85,8 +97,8 @@ int main(int argc, char **argv)
 					
 					if(!node.is_intersection(list_Target[i].get_Position(),list_Target[j].get_Position()))
 					{
-						Line line(id_curr,list_Target[i],list_Target[j],color2);
-						mapgui.add_Object(line.create_MSG_Marker());
+						//Line line(id_curr,list_Target[i],list_Target[j],color2);
+						//mapgui.add_Object(line.create_MSG_Marker());
 						id_curr++;
 					}
 				}

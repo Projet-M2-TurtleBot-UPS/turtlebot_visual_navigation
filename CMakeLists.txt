@@ -141,7 +141,7 @@ include_directories(
 ## either from message generation or dynamic reconfigure
 
 ## Declare a C++ executable
-add_executable(map_node  src/Map_Main.cpp src/Line.cpp src/Target.cpp src/Map_node.cpp src/Map_Gui.cpp src/Image_processing.cpp)
+add_executable(map_node  src/Map_Main.cpp src/Line.cpp src/Target.cpp src/Map_node.cpp src/Map_Gui.cpp src/Image_processing.cpp src/Point_Cloud)
 
 
 
