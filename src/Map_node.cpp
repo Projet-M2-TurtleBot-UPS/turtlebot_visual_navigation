@@ -80,6 +80,8 @@ std::vector<int> Map_node::pose_to_pix(float x_pos,float y_pos)
 	std::vector<int> vec;
 	vec.push_back(x);
 	vec.push_back(y);
+	vec.push_back(0);
+
 	return vec;
 }
 
@@ -104,8 +106,10 @@ std::vector<float> Map_node::pix_to_pose(int x_pix,int y_pix)
 	std::vector<float> vec;
 	vec.push_back(x);
 	vec.push_back(y);
+	vec.push_back(0.0f);
 	return vec;
 }
+
 
 
 
@@ -125,8 +129,8 @@ bool Map_node::is_intersection (std::vector<float> start, std::vector<float> end
 	float dir_y = diff_y/dist;
 
 	//Resize the direction's vector
-	dir_x *= (resolution_/2.0f);
-	dir_y *= (resolution_/2.0f);
+	dir_x *= (resolution_/1.5f);
+	dir_y *= (resolution_/1.5f);
 
 	//Verifacation 
 	float pos_x=start[0];
@@ -135,7 +139,7 @@ bool Map_node::is_intersection (std::vector<float> start, std::vector<float> end
 		  (pos_y<end[1]-resolution_ || pos_y>end[1]+resolution_))
 	{
 		pix=pose_to_pix(pos_x,pos_y);
-		if(100 == get_Val_Pix_Map(pix[0],pix[1]))
+		if(100 == get_Val_Pix_Map(pix[0],pix[1]) || -1 == get_Val_Pix_Map(pix[0],pix[1]))
 			return true;
 		pos_x+=dir_x;
 		pos_y+=dir_y;
@@ -147,8 +151,8 @@ bool Map_node::is_intersection (std::vector<float> start, std::vector<float> end
 
 // Is_Intersection
 // Check if there isn't obstacle between start and end
-// start:	Position of start (x,y,z) in m
-// end:		Position of end (x,y,z) in m
+// start:	Position of pixel (x,y) in int
+// end:		Position of pixel (x,y) in int
 bool Map_node::is_intersection (std::vector<int> start, std::vector<int> end)
 {
 	std::vector<int> pix;
@@ -160,8 +164,8 @@ bool Map_node::is_intersection (std::vector<int> start, std::vector<int> end)
 	float dir_y = diff_y/dist;
 
 	//Resize the direction's vector
-	dir_x *= (resolution_/2.0f);
-	dir_y *= (resolution_/2.0f);
+	dir_x *= (resolution_/1.5f);
+	dir_y *= (resolution_/1.5f);
 
 	//Verifacation 
 	int pos_x=start[0];
@@ -169,7 +173,87 @@ bool Map_node::is_intersection (std::vector<int> start, std::vector<int> end)
 	while((pos_x<end[0]-resolution_ || pos_x>end[0]+resolution_) ||
 		  (pos_y<end[1]-resolution_ || pos_y>end[1]+resolution_))
 	{
-		if(100 == get_Val_Pix_Map(pos_x,pos_y))
+		int pix =  get_Val_Pix_Map(pos_x,pos_y);
+		if(pix == 100 || pix == (-1))
+			return true;
+		pos_x+=dir_x;
+		pos_y+=dir_y;
+	}
+
+	return false;
+}
+
+
+// Is_Intersection
+// Check if there isn't obstacle between start and end
+// start:		Position of pixel (x,y) in int
+// end:			Position of pixel (x,y) in int
+// distance:	Distance threshold in meter
+bool Map_node::is_intersection (std::vector<int> start, std::vector<int> end, float distance)
+{
+	std::vector<int> pix;
+	//Find the direction's vector
+	float diff_x=((float)end[0]-(float)start[0]);
+	float diff_y=((float)end[1]-(float)start[1]);
+	float dist = sqrt(diff_x*diff_x + diff_y*diff_y);
+	float dir_x = diff_x/dist;
+	float dir_y = diff_y/dist;
+
+	//Resize the direction's vector
+	dir_x *= (resolution_/1.5f);
+	dir_y *= (resolution_/1.5f);
+
+	//Verifacation 
+	int pos_x=start[0];
+	int pos_y=start[1];
+
+	if(dist>distance/resolution_)
+		return true;
+
+	while((pos_x<end[0]-resolution_ || pos_x>end[0]+resolution_) ||
+		  (pos_y<end[1]-resolution_ || pos_y>end[1]+resolution_))
+	{
+		int pix =  get_Val_Pix_Map(pos_x,pos_y);
+		if(pix == 100 || pix == (-1))
+			return true;
+		pos_x+=dir_x;
+		pos_y+=dir_y;
+	}
+
+	return false;
+}
+
+// Is_Intersection
+// Check if there isn't obstacle between start and end
+// start:	Position of start (x,y,z) in m
+// end:		Position of end (x,y,z) in m
+// distance:	Distance threshold in meter
+bool Map_node::is_intersection (std::vector<float> start, std::vector<float> end, float distance)
+{
+	std::vector<int> pix;
+	//Find the direction's vector
+	float diff_x=(end[0]-start[0]);
+	float diff_y=(end[1]-start[1]);
+	float dist = sqrt(diff_x*diff_x + diff_y*diff_y);
+	float dir_x = diff_x/dist;
+	float dir_y = diff_y/dist;
+
+	//Resize the direction's vector
+	dir_x *= (resolution_/1.5f);
+	dir_y *= (resolution_/1.5f);
+
+	//Verifacation 
+	float pos_x=start[0];
+	float pos_y=start[1];
+
+	if(dist>distance)
+		return true;
+
+	while((pos_x<end[0]-resolution_ || pos_x>end[0]+resolution_) ||
+		  (pos_y<end[1]-resolution_ || pos_y>end[1]+resolution_))
+	{
+		pix=pose_to_pix(pos_x,pos_y);
+		if(100 == get_Val_Pix_Map(pix[0],pix[1]) || -1 == get_Val_Pix_Map(pix[0],pix[1]))
 			return true;
 		pos_x+=dir_x;
 		pos_y+=dir_y;

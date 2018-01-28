@@ -13,6 +13,10 @@
 #include "visualization_msgs/Marker.h"
 #include <fstream>
 
+# define SCALE_X_TARGET 0.2
+# define SCALE_Y_TARGET 0.2
+# define SCALE_Z_TARGET 0.02
+
 using namespace std;
 
 
@@ -21,10 +25,11 @@ class Target
 {
 	private:
 		int id_;					// Object's id
-		int type_;					// Target's type (0:Random 1:Start 2:ArCode)
+		int type_;					// Target's type (0:Random 1:Start 2:ArCode 3:End)
 		vector<float> position_;	// Target's position in x, y and z (in m)
 		vector<float> orientation_;	// Target's orientation in x, y, z and w (in rad)
 		vector<float> color_;		// Target's color in RGB ([0.0 .. 1.0])
+		vector<int> sons_;		// Target's sons in the graph
 
 	public:
 
@@ -37,14 +42,22 @@ class Target
 
 		//Operator
 		visualization_msgs::Marker create_MSG_Marker ();
+		void add_Son(int id);
+		bool remove_Son(int id);
+		float euclidean_Distance(Target &t);
+		bool equals(Target &t);
+		bool equals(int id_Target);
 
 		//Getter
 		vector<float> get_Position ();
 		vector<float> get_Orientation ();
 		vector<float> get_Color ();
 		int get_Id ();
+		int get_Type();
+		vector<int> get_Sons();
 
 		//Setter
+		void set_Id_Failure();
 		void set_Position (vector<float> pos);
 		void set_Orientation (vector<float> orien);
 		void set_Color (vector<float> color);

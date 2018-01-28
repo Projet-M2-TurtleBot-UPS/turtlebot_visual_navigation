@@ -31,11 +31,12 @@ class Point_Cloud
 		int max_err_cons_;
 		int width_map_;
 		int height_map_;
+		float resolution_;
 
 	public:
 
 		//Constructor
-		Point_Cloud(Map_node map, vector<Target> markers, vector<float> start_point, int dist_vis, int nb_err_cons);
+		Point_Cloud(Map_node &map, vector<Target> &markers, vector<float> &start_point);
 		Point_Cloud(){};
 
 		//Destructor
@@ -46,14 +47,17 @@ class Point_Cloud
 		void fill_Circle(int x, int y);
 		bool is_In_Circle(int x_Center, int y_Center, int x_Point, int y_Point);
 		bool is_Target_Redundant(int x_Target, int y_Target);
-		bool is_Target_Connected(int x_Target, int y_Target);
+		bool is_Target_Connected_Pix(int x_Target, int y_Target);
+		bool is_Target_Connected_Pos(float x_Target, float y_Target);
+		
+
 
 		//Getter
 
 		//Setter
 
-		//debug
-		void write_BMP (vector<int> map_data_);
+		//Debug
+		void write_BMP (vector<int> &map_data_);
 
 };
 

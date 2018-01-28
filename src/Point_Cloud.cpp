@@ -9,17 +9,20 @@
 # include "Point_Cloud.hpp"
 
 # define SIZE_FILTER_NEIGHBOR 4
+# define VISIBILITY 20
+# define NB_ERR_CONS 8000
 
 //Constructor
-	Point_Cloud::Point_Cloud(Map_node map, vector<Target> markers, vector<float> start_point, int dist_vis, int max_err_cons)
+	Point_Cloud::Point_Cloud(Map_node &map, vector<Target> &markers, vector<float> &start_point)
 	{
 		map_real_ = map;
 		markers_ = markers;
 		start_point_ = start_point;
-		dist_vis_ = dist_vis;
-		max_err_cons_ = max_err_cons;
+		dist_vis_ = VISIBILITY;
+		max_err_cons_ = NB_ERR_CONS;
 		width_map_ = map_real_.get_Width_Map();
 		height_map_ = map_real_.get_Height_Map();
+		resolution_ = map.get_Resolution_Map();
 	}
 
 	
@@ -49,7 +52,7 @@
 		orien.push_back(0.0f);
 		orien.push_back(1.0f);
 
-		Target t = Target(nb_point++, 0, map_real_.pix_to_pose(start_point_[0], start_point_[1]), orien);
+		Target t;
 		while(cpt_err_cons < max_err_cons_)
 		{
     		int x_rand=rand()%width_map_;
@@ -59,7 +62,7 @@
 			// We want to place a new target in an empty area
     		if(val_pix==0 && map_real_.is_Location_Ok(x_rand, y_rand, SIZE_FILTER_NEIGHBOR))
     		{
-    			if(is_Target_Connected(x_rand, y_rand)){
+    			if(is_Target_Connected_Pix(x_rand, y_rand)){
 	    			cpt_err_cons = 0;
 	    			Target t = Target(nb_point++, 0, map_real_.pix_to_pose(x_rand, y_rand), orien);
 	    			targets_.push_back(t);
@@ -72,7 +75,7 @@
 	    	// We want to place a new target in an area if visibility
     		} else if (val_pix==50 && map_real_.is_Location_Ok(x_rand, y_rand, SIZE_FILTER_NEIGHBOR))
     		{
-    			if(is_Target_Redundant(x_rand, y_rand) || (!is_Target_Connected(x_rand, y_rand))){
+    			if(is_Target_Redundant(x_rand, y_rand) || (!is_Target_Connected_Pix(x_rand, y_rand))){
     				++cpt_err_cons;
     			}
     			else{
@@ -92,13 +95,12 @@
 		//add markers to the vector of targets
 		for(int id_marker=0; id_marker<markers_.size(); ++id_marker){
 			pos = markers_[id_marker].get_Position();
-			if(is_Target_Connected(pos[0], pos[1])){
+			if(is_Target_Connected_Pos(pos[0], pos[1])){
 				targets_.push_back(markers_[id_marker]);
 			}
 		}
 
 		//printf("%d\n", cpt_err_cons);
-		printf("%d\n", (int)targets_.size());
 		write_BMP(map_treatment_);
 		return targets_;
 	}
@@ -146,7 +148,7 @@
 			end = targets_[id_Target].get_Position();
 			end_Pix = map_real_.pose_to_pix(end[0], end[1]);
 			if(is_In_Circle(x_Target, y_Target, end_Pix[0], end_Pix[1])){
-				if(!map_real_.is_intersection(start, end)){
+				if(!map_real_.is_intersection(start, end, ((float)(VISIBILITY+10) * resolution_))){
 					return true;
 				}
 			}
@@ -159,15 +161,37 @@
 	// Return true if the input target is connected to the others targets, false otherwise
 	// x_Target: position in x of the target
 	// y_Target: position in y of the target
-	bool Point_Cloud::is_Target_Connected(int x_Target, int y_Target){
+	bool Point_Cloud::is_Target_Connected_Pix(int x_Target, int y_Target){
 		vector<float> start = map_real_.pix_to_pose(x_Target, y_Target);
 		vector<float> end = start_point_;
-		if(!map_real_.is_intersection(start, end)){
+		if(!map_real_.is_intersection(start, end, ((float)(VISIBILITY+10) * resolution_))){
 			return true;
 		}
 		for(int id_Target=0; id_Target<targets_.size(); ++id_Target){
 			end = targets_[id_Target].get_Position();
-			if(!map_real_.is_intersection(start, end)){
+			if(!map_real_.is_intersection(start, end, ((float)(VISIBILITY+10) * resolution_))){
+				return true;
+			}
+		}
+		return false;
+	}
+
+
+	// is_Target_Connected
+	// Return true if the input target is connected to the others targets, false otherwise
+	// x_Target: position in x of the target
+	// y_Target: position in y of the target
+	bool Point_Cloud::is_Target_Connected_Pos(float x_Target, float y_Target){
+		vector<float> start;
+		start.push_back(x_Target);
+		start.push_back(y_Target); 
+		vector<float> end = start_point_;
+		if(!map_real_.is_intersection(start, end, ((float)(VISIBILITY+10) * resolution_))){
+			return true;
+		}
+		for(int id_Target=0; id_Target<targets_.size(); ++id_Target){
+			end = targets_[id_Target].get_Position();
+			if(!map_real_.is_intersection(start, end, ((float)(VISIBILITY+10) * resolution_))){
 				return true;
 			}
 		}
@@ -177,11 +201,11 @@
 
 
 	// DEBUG MOD
-void Point_Cloud::write_BMP (vector<int> map_data_)
+void Point_Cloud::write_BMP (vector<int> &map_data_)
 {
 	unsigned char *image = (unsigned char *) new unsigned char [height_map_*width_map_];
 
-	std::ofstream f("map.pgm",std::ios_base::out);
+	ofstream f("map.pgm",std::ios_base::out);
 
 	int maxColorValue = 255;
 	f<<"P5\n"<<width_map_<<" "<<height_map_<<"\n"<<maxColorValue<<"\n";
@@ -198,7 +222,6 @@ void Point_Cloud::write_BMP (vector<int> map_data_)
 			else
 				image[i*width_map_+j] = (unsigned char)150;
 		}
-
+	ROS_INFO("   [DEBUG_MODE] \"Generation of visibility map\"");
 	f.write(reinterpret_cast<char *>(image),(height_map_*width_map_)*sizeof(unsigned char));
-	exit(1);
 }

@@ -34,6 +34,24 @@ vector<float> color_magenta()
 vector<float> color_yellow()
 {
 	vector<float> vec;
+	vec.push_back(1.0);
+	vec.push_back(1.0);
+	vec.push_back(0.0);
+	return vec;
+};
+
+vector<float> color_orange()
+{
+	vector<float> vec;
+	vec.push_back(1.0);
+	vec.push_back(5.0);
+	vec.push_back(0.0);
+	return vec;
+};
+
+vector<float> color_cyan()
+{
+	vector<float> vec;
 	vec.push_back(0.0);
 	vec.push_back(1.0);
 	vec.push_back(1.0);

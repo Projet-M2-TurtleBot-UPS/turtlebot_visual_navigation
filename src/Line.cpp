@@ -12,18 +12,22 @@
 #define SCALE_Z 0.0
 
 //Constructor
-	Line::Line(int id,Target st,Target en, vector<float> c)
+	Line::Line(int id,Target &st,Target &en, vector<float> c)
 	{
-		id_ =id;
-		start_=st;
+		id_ = id;
+		start_ = st;
 		end_ = en;
-		color_=c;
+		color_ = c;
 	}
 
 
 
 //Destructor
-	Line::~Line(){}
+	Line::~Line()
+	{
+		//start_.remove_Son(end_);
+		//end_.remove_Son(start_);
+	}
 
 
 

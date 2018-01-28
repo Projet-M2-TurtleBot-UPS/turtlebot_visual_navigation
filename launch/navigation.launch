@@ -11,7 +11,7 @@
     
   <!-- MAP SERVER -->
   <!-- Map of the environment -->
-  <arg name="map_file" default="$(find turtlebot_visual_navigation)/map/aip_map.yaml"/>
+  <arg name="map_file" default="$(find turtlebot_visual_navigation)/map/map_aip_full.yaml"/>
   <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)" />
   <!-- Markers positions on the map -->
   <node pkg="tf" type="static_transform_publisher" name="marker_tf_publisher_1" args="4.70 4.44 0.31 0.0 -0.707 0.0 0.707 map marker_0 100" />

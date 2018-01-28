@@ -26,7 +26,7 @@ class Line
 	public:
 
 		//Constructor
-		Line(int id,Target st,Target en, vector<float> color);
+		Line(int id,Target &st,Target &en, vector<float> color);
 		Line(){};
 
 		//Destructor

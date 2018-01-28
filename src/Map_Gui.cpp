@@ -7,8 +7,8 @@
 /***********************************************************************/
 # include "Map_Gui.hpp"
 
-using namespace std;
 
+using namespace std;
 
 
 
@@ -121,7 +121,282 @@ int Map_Gui::add_Object (visualization_msgs::Marker marker)
 	return 0;
 }
 
+//Add_List_Target
+//add a list object of type Target on map.
+//marker: 	object's message of type visualization_msgs::Marker
+int Map_Gui::add_List_Target (int id, vector<Target> list)
+{
+//Init MSG
+	visualization_msgs::Marker marker;
+	marker.header.frame_id = "/map";
+	marker.header.stamp = ros::Time::now();
+	marker.ns = "target_List";
+	marker.id = id;
+	marker.type = visualization_msgs::Marker::CUBE_LIST;
+	marker.action = visualization_msgs::Marker::ADD;
+	//marker.pose.position.x = 0.0f;
+	//marker.pose.position.y = 0.0f;
+	marker.pose.position.z = 0.2f;
+	marker.pose.orientation.x = 0;
+	marker.pose.orientation.y = 0;
+	marker.pose.orientation.z = 0;
+	marker.pose.orientation.w = 1;
 
+	marker.scale.x = SCALE_X_TARGET;
+	marker.scale.y = SCALE_Y_TARGET;
+	marker.scale.z = SCALE_Z_TARGET;
+	marker.color.a = 1.0; // Don't forget to set the alpha!
+	marker.color.r = 1.0;
+	marker.color.g = 0.0;
+	marker.color.b = 0.0;
+
+	for(unsigned int j=0; j<list.size(); ++j)
+	{
+		vector<float> pos = list[j].get_Position();
+		geometry_msgs::Point p;
+		p.x= pos[0];
+		p.y= pos[1];
+		p.z= pos[2];
+
+		marker.points.push_back(p);
+
+		vector<float> color = list[j].get_Color();
+		std_msgs::ColorRGBA c;
+		c.r= color[0];
+		c.g= color[1];
+		c.b= color[2];
+		c.a= 1.0;
+
+		marker.colors.push_back(c);
+	}
+
+	marker.lifetime = ros::Duration();
+
+	//Send msg
+	int i =0;
+	while(i<2)
+	{
+		vis_pub.publish( marker );
+		ros::Duration(0.1).sleep();
+		i++;
+	}
+
+	return 0;
+}
+
+int Map_Gui::add_Line (int id,Target start, Target end, vector<float> color)
+{
+	visualization_msgs::Marker marker;
+	marker.header.frame_id = "/map";
+	marker.header.stamp = ros::Time::now();
+	marker.ns = "Line";
+	marker.id = id;
+	marker.type = visualization_msgs::Marker::LINE_STRIP;
+	marker.action = visualization_msgs::Marker::ADD;
+	marker.pose.orientation.w = 1.0;
+	marker.scale.x = SCALE_X_LINE;
+	marker.scale.y = SCALE_Y_LINE;
+	marker.scale.z = SCALE_Z_LINE;
+	marker.color.a = 1.0; // Don't forget to set the alpha!
+	marker.color.r = color[0];
+	marker.color.g = color[1];
+	marker.color.b = color[2];
+	marker.lifetime = ros::Duration();
+
+	geometry_msgs::Point s,e;
+	vector<float> vec = start.get_Position();
+	s.x = vec[0];
+	s.y = vec[1];
+	s.z = vec[2]+0.01;//+0.01
+
+	vec = end.get_Position();
+	e.x = vec[0];
+	e.y = vec[1];
+	e.z = vec[2]+0.01;
+
+	marker.points.push_back(s);
+	marker.points.push_back(e);
+
+	marker.lifetime = ros::Duration();
+
+	//Send msg
+	int i =0;
+	while(i<2)
+	{
+		vis_pub.publish( marker );
+		ros::Duration(0.1).sleep();
+		i++;
+	}
+}
+
+
+int Map_Gui::add_Line (int id,vector<float> start, vector<float> end, vector<float> color)
+{
+	visualization_msgs::Marker marker;
+	marker.header.frame_id = "/map";
+	marker.header.stamp = ros::Time::now();
+	marker.ns = "Line";
+	marker.id = id;
+	marker.type = visualization_msgs::Marker::LINE_STRIP;
+	marker.action = visualization_msgs::Marker::ADD;
+	marker.pose.orientation.w = 1.0;
+	marker.scale.x = SCALE_X_LINE;
+	marker.scale.y = SCALE_Y_LINE;
+	marker.scale.z = SCALE_Z_LINE;
+	marker.color.a = 1.0; // Don't forget to set the alpha!
+	marker.color.r = color[0];
+	marker.color.g = color[1];
+	marker.color.b = color[2];
+	marker.lifetime = ros::Duration();
+
+	geometry_msgs::Point s,e;
+	s.x = start[0];
+	s.y = start[1];
+	s.z = 0.01;//+0.01
+
+	e.x = end[0];
+	e.y = end[1];
+	e.z = 0.01;
+
+	marker.points.push_back(s);
+	marker.points.push_back(e);
+
+	marker.lifetime = ros::Duration();
+
+	//Send msg
+	int i =0;
+	while(i<2)
+	{
+		vis_pub.publish( marker );
+		ros::Duration(0.1).sleep();
+		i++;
+	}
+}
+
+//Add_Line_Strip
+//add a list object of type line on map.
+//
+int Map_Gui::add_Line_strip_float (int id, vector<vector<float> > list_pos, vector<float> color_RGBA)
+{
+	//Init MSG
+	visualization_msgs::Marker marker;
+	marker.header.frame_id = "/map";
+	marker.header.stamp = ros::Time::now();
+	marker.ns = "Line_strip_smooth";
+	marker.id = id;
+	marker.type = visualization_msgs::Marker::LINE_STRIP;
+	marker.action = visualization_msgs::Marker::ADD;
+	marker.scale.x = SCALE_X_LINE;
+	marker.scale.y = SCALE_Y_LINE;
+	marker.scale.z = SCALE_Z_LINE;
+	marker.pose.orientation.x = 0.0f;
+	marker.pose.orientation.y = 0.0f;
+	marker.pose.orientation.z = 0.0f;
+	marker.pose.orientation.w = 1.0f;
+
+	
+	marker.color.a = 1.0; // Don't forget to set the alpha!
+	marker.color.r = 0.0;
+	marker.color.g = 0.0;
+	marker.color.b = 0.0;
+
+	std_msgs::ColorRGBA c;
+	c.r= color_RGBA[0];
+	c.g= color_RGBA[1];
+	c.b= color_RGBA[2];
+	c.a= 1.0;
+
+
+	for(unsigned int j=0; j<list_pos.size(); ++j)
+	{
+		vector<float> pos = list_pos[j];
+		geometry_msgs::Point p;
+		p.x= pos[0];
+		p.y= pos[1];
+		p.z= 0.01;
+
+		marker.points.push_back(p);
+
+		marker.colors.push_back(c);
+	}
+
+	marker.lifetime = ros::Duration();
+
+	//Send msg
+	int i =0;
+	printf("a\n");
+	while(i<40)
+	{
+		printf("b\n");
+		vis_pub.publish( marker );
+		ros::Duration(0.1).sleep();
+		i++;
+	}
+
+	return 0;
+}
+
+
+//Add_Line_Strip
+//add a list object of type line on map.
+//
+int Map_Gui::add_Line_strip (int id, vector<Target> list_Target, vector<float> color_RGBA)
+{
+	//Init MSG
+	visualization_msgs::Marker marker;
+	marker.header.frame_id = "/map";
+	marker.header.stamp = ros::Time::now();
+	marker.ns = "Line_strip";
+	marker.id = id;
+	marker.type = visualization_msgs::Marker::LINE_STRIP;
+	marker.action = visualization_msgs::Marker::ADD;
+	marker.scale.x = SCALE_X_LINE;
+	marker.scale.y = SCALE_Y_LINE;
+	marker.scale.z = SCALE_Z_LINE;
+	marker.pose.orientation.x = 0.0f;
+	marker.pose.orientation.y = 0.0f;
+	marker.pose.orientation.z = 0.0f;
+	marker.pose.orientation.w = 1.0f;
+
+	marker.scale.x = 0.1;
+	marker.color.a = 1.0; // Don't forget to set the alpha!
+	marker.color.r = 1.0;
+	marker.color.g = 0.0;
+	marker.color.b = 0.0;
+
+	std_msgs::ColorRGBA c;
+	c.r= color_RGBA[0];
+	c.g= color_RGBA[1];
+	c.b= color_RGBA[2];
+	c.a= 1.0;
+
+
+	for(unsigned int j=0; j<list_Target.size(); ++j)
+	{
+		vector<float> pos = list_Target[j].get_Position();
+		geometry_msgs::Point p;
+		p.x= pos[0];
+		p.y= pos[1];
+		p.z= 0.01;
+
+		marker.points.push_back(p);
+
+		marker.colors.push_back(c);
+	}
+
+	marker.lifetime = ros::Duration();
+
+	//Send msg
+	int i =0;
+	while(i<2)
+	{
+		vis_pub.publish( marker );
+		ros::Duration(0.1).sleep();
+		i++;
+	}
+
+	return 0;
+}
 
 
 //Debug Mod

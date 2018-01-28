@@ -1,4 +1,4 @@
-image: ~/ROS/catkin_ws/src/turtlebot_visual_navigation/map/map_aip_full.pgm
+image: ./map_aip_full.pgm
 resolution: 0.050000
 origin: [-23.400000, -15.400000, 0.000000]
 negate: 0

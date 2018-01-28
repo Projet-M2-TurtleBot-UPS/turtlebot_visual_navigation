@@ -44,6 +44,8 @@ class Map_node
 		std::vector<float> pix_to_pose(int x_pix,int y_pix);
 		bool is_intersection (std::vector<float> start, std::vector<float> end);
 		bool is_intersection (std::vector<int> start, std::vector<int> end);
+		bool is_intersection (std::vector<float> start, std::vector<float> end, float distance);
+		bool is_intersection (std::vector<int> start, std::vector<int> end, float distance);
 		bool is_Location_Ok(int x, int y, int dim);
 
 		// Map_Modifier
