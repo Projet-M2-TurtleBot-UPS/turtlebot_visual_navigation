@@ -187,15 +187,6 @@ bool Graph::exist(vector<Target> &targets, int id_Target)
 	return false;
 }
 
-/*vector<Target> Graph::get_neighbor(vector<int> vec_id)
-{
-	vector<Target> vec;
-	vec.resize(vec_id.size());
-	for(int i = 0 ; i< vec_id.size(); ++i)
-		vec[i] = list_Target_[vec_id[i]];
-	return vec;
-}*/
-
 //Getter
 
 //Setter

@@ -42,7 +42,6 @@ class Graph
 		int get_Index_From_Target( vector<Target> list, Target &t);
 		bool exist(vector<Target> &targets, Target &t);
 		bool exist(vector<Target> &targets, int id_Target);
-		//vector<Target> get_neighbor(vector<int> vec_id);
 
 		//Getter
 

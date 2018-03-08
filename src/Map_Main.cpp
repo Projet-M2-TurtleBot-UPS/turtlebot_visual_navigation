@@ -125,7 +125,7 @@ int main(int argc, char **argv)
 						//Line line(id_curr,*it1,*it2,color2);
 						list_Target[i].add_Son(j);
 						list_Target[j].add_Son(i);
-						mapgui.add_Line(i*list_Target.size()+j,list_Target[i],list_Target[j],color2);
+						//mapgui.add_Line(i*list_Target.size()+j,list_Target[i],list_Target[j],color2);
 						//id_curr++;
 					}
 				}
@@ -140,8 +140,8 @@ int main(int argc, char **argv)
 			if(path.size() == 0){
 				ROS_INFO(" [ROBOT] \"Impossible de trouver un chemin pour aller du start_point au end_point...\"\n");
 			} else {
-				/*ROS_INFO("... DISPLAY PATH ...");
-				mapgui.add_Line_strip (0,path, color2);*/
+				ROS_INFO("... DISPLAY PATH ...");
+				mapgui.add_Line_strip (0,path, color2);
 				ROS_INFO("... GENERATION SMOOTH PATH ...");
 				vector<vector<float > > smooth_path = Generator_smooth_Path(path,40);
 				/*ROS_INFO("... DISPLAY SMOOTH PATH ...");
