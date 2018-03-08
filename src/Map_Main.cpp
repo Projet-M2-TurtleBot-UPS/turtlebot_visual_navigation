@@ -5,7 +5,6 @@
 # include "Image_processing.hpp"
 # include "Point_Cloud.hpp"
 # include "Graph.hpp"
-# include "Graph2.hpp"
 
 
 # include "Smooth_Path.cpp"
@@ -133,7 +132,7 @@ int main(int argc, char **argv)
 			}
 
 			ROS_INFO("... A* ...");
-			Graph2 graph = Graph2(start_target, end_target, list_Target, node);
+			Graph graph = Graph(start_target, end_target, list_Target);
 			vector<Target> path = graph.a_Star();
 
 			

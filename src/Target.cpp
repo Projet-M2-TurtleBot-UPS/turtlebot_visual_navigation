@@ -60,8 +60,10 @@
 		return marker;
 	}
 
+	// add_son
+	// add the id of the son to the sons of this Target
+	// id: the id of the son to add
 	void Target::add_Son(int id){
-		//printf("ajout du son %d à %d\n", son.get_Id(), id_);
 		sons_.push_back(id);
 	}
 
@@ -75,6 +77,9 @@
 		return false;
 	}
 
+	// euclidean_Distance
+	// Return the euclidean distance between this target and a target given
+	// t: the target from wich we want to calculate the distance with the current
 	float Target::euclidean_Distance(Target &t){
 		vector<float> t_Position = t.get_Position();
 		float x_T = t_Position[0];
@@ -82,11 +87,16 @@
 		return (sqrt((x_T-position_[0])*(x_T-position_[0])+(y_T-position_[1])*(y_T-position_[1])));
 	}
 
+	// equals
+	// Return true if this target is the same as the given Target (same id)
+	// t: the Target from wich we want to verify the equality with
 	bool Target::equals(Target &t){
-		//printf("%d : %d\n", t.get_Id(), id_);
 		return (t.get_Id() == id_);
 	}
 
+	// equals
+	// Return true if this target id is the same as the given id
+	// id_Target: the id of the Target from wich we want to verify the equality with
 	bool Target::equals(int id_Target){
 		return (id_Target == id_);
 	}

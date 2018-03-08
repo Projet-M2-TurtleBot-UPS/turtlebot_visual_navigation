@@ -22,16 +22,16 @@ using namespace std;
 class Point_Cloud
 {
 	private:
-		vector<int> map_treatment_;
-		vector<Target> targets_;
-		vector<Target> markers_;
-		vector<float> start_point_;
-		Map_node map_real_;
-		float dist_vis_;
-		int max_err_cons_;
-		int width_map_;
-		int height_map_;
-		float resolution_;
+		Map_node map_real_;	// the map on wich we extract informations
+		vector<int> map_treatment_; // the map used to apply intermediate treatments
+		vector<Target> targets_;	// the vector in wich we will store the targets of the point cloud
+		vector<Target> markers_;	// the vector in wich are stored the Targets representing the ar-markers
+		vector<float> start_point_;	// a vector containing the position of the start point
+		float dist_vis_;	// the minimal distance between two points of the point cloud
+		int max_err_cons_;	// the number of consecutive errors before we stop trying to add points to the point cloud
+		int width_map_;	// the width of the map
+		int height_map_;	// the height of the map
+		float resolution_;	// the resolution of the map
 
 	public:
 

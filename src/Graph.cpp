@@ -1,5 +1,5 @@
 /***********************************************************************/
-/*                          Graph.cpp                            	   */
+/*                          Create_Graph.cpp                            	   */
 /***********************************************************************/
 /* -VERSION: ROS_Ubuntu 14.04                                          */
 /* -AUTHOR:  BREFEL Hugo                                      		   */
@@ -9,136 +9,193 @@
 # include "Graph.hpp"
 
 //Constructor
-	Graph::Graph(Target &start_point, Target &end_point, vector<Target> &list_Target, Map_node &node)
-	{
-		start_point_ = start_point;
-		end_point_ = end_point;
-		list_Target_= list_Target;
-		node_ = node;
-		current_Cost_ = 0;
-	}
+Graph::Graph(Target &start_point, Target &end_point, vector<Target> &list_Target)
+{
+	start_point_ = start_point;
+	end_point_ = end_point;
+	list_Target_= list_Target;
+}
 
-	vector<Target> Graph::a_Star(){
-		printf("hello\n");
-		Target current = start_point_;
-		vector<Target> tabou;
-		printf("hello2\n");
-		while(!current.equals(end_point_)){
-			//init_Sons(current);
-			vector<Target> targets = current.get_Sons();
-			if(current.get_Type() == 2){
-				tabou.push_back(current);
-			}
-			printf("hello3\n");
+// a_star
+// Return a vector of Targets representing the path determined on the graph by an a star algo
+vector<Target> Graph::a_Star()
+{	
+	vector<Target> closed_Target;
+	vector<Target> open_Target;
+	open_Target.push_back(start_point_);		
+	vector<Target> came_From;
+	came_From.resize(list_Target_.size());
+	vector<float> gScore;
+	gScore.resize(list_Target_.size());
 
-			for(int i=0; i<targets.size(); ++i){
-				Target son = targets[i];
-				float cost = cost_calculation(current, son);
-				add_Node(current, son, cost);
-			}
-			printf("hello4\n");
-			current = get_Optimum(tabou);
+	for(int i = 0; i< gScore.size(); ++i) gScore[i] = INFINITY;
+	
+	gScore[(gScore.size()-2)] = 0.0f;
+	vector<float> fScore;
+	fScore.resize(list_Target_.size());
+	
+	for(int i = 0; i< fScore.size(); ++i) fScore[i] = INFINITY;
+	
+	fScore[(fScore.size()-2)] = 0.0f;
+	
+	Target current;
+	current.set_Id_Failure();
+	vector<Target> failure;
+	
+	while (open_Target.size()!=0){
+		int index_Target  = get_Lowest_FScore(fScore, open_Target);
+		if(index_Target == -1){
+			return failure;
 		}
-		return find_Path();
-	}
+		else {
 
-	void Graph::init_Sons(Target &current){
-		vector<Target>::iterator it;
-		for(it=list_Target_.begin(); it!=list_Target_.end();++it){
-			if((!current.equals(*it)) && (!node_.is_intersection(current.get_Position(),it->get_Position())))
-			{
-				current.add_Son(*it);
-			}
+			current= list_Target_[index_Target];
 		}
-	}
 
-	//ADD ROTATION !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	float Graph::cost_calculation(Target &mother, Target &son){
-		float cost = current_Cost_;
-		//Direct cost
-		cost += mother.euclidean_Distance(son)/**DISTANCE_COST*/;
-		//If son is an AR marker
-		/*if(son.get_Type() == 2)
-			cost += AR_COST;*/
-		//Heuristic
-		cost += son.euclidean_Distance(end_point_);
-	}
+		if(current.equals(end_point_)){
+			
+			return reconstruct_path(came_From, current);
+		}
+		
+		if(current.equals(open_Target.back())){
+			open_Target.pop_back();
+		} else  {
+			open_Target.erase(open_Target.begin()+get_Index_From_Target(open_Target, current));
+		}
+		
+		closed_Target.push_back(current);
+		vector<int> neighbor = current.get_Sons();
+		Target it;
 
-	Target Graph::get_Optimum(vector<Target> &tabou){
-		float min_Cost = list_nodes_[0].get_Cost();
-		Target min_Target = list_nodes_[0].get_Son();
-		Target temp_Target;
-		bool is_Tabou;
-		int min_Index = 0;
-		for(int i = 1; i<list_nodes_.size(); ++i){
-			is_Tabou = false;
-			for(int j=0; j<tabou.size(); ++j){
-				if(list_nodes_[i].get_Son().equals(tabou[j])){
-					is_Tabou = true;
+		for(int index = 0; index<neighbor.size(); ++index) {
+			int index_Neighbor = neighbor[index];
+			it = list_Target_[index_Neighbor];
+
+			if(!exist(closed_Target, it)){
+				if(!exist(open_Target, it.get_Id())){
+					open_Target.push_back(it);
 				}
-			}
-			if(!is_Tabou && !list_nodes_[i].is_Treated()){
-				temp_Target = list_nodes_[i].get_Son();
-				if(list_nodes_[i].get_Cost()<min_Cost){
-					min_Cost = list_nodes_[i].get_Cost();
-					min_Target = temp_Target;
-					min_Index = i;
+				
+				double tentative_gScore = gScore[index_Target] + current.euclidean_Distance(it)*DISTANCE_COST;
+				if(it.get_Type() == 2){
+					tentative_gScore += AR_COST;
 				}
-			}
-		}
-		current_Cost_ = min_Cost;
-		list_nodes_[min_Index].set_Treated(true);
-		return temp_Target;
-	}
 
-	void Graph::add_Node(Target &mother, Target &son, float cost){
-		Node temp_Node;
-		for(int i =0; i<list_nodes_.size(); ++i){
-			temp_Node = list_nodes_[i];
-			if(temp_Node.get_Son().equals(son)){
-				if(cost<temp_Node.get_Cost()){
-					temp_Node.set_Treated(false);
-					temp_Node.set_Mother(mother);
-					temp_Node.set_Cost(cost);
+				if(tentative_gScore < gScore[index_Neighbor]){
+					came_From[index_Neighbor] = current;
+					gScore[index_Neighbor] = tentative_gScore;
+					fScore[index_Neighbor] = gScore[index_Neighbor] + heuristic(it);
 				}
-				return;
+
 			}
 		}
-		temp_Node = Node(mother, son, cost);
-		list_nodes_.push_back(temp_Node);
+	}
+	return failure;
+}
+
+// reconstruct_Path
+// Return the path determined by a star reconstructed in the right order
+// came_from: vector containing the Target from wich Target are coming from
+// current: the end Target
+vector<Target> Graph::reconstruct_path(vector<Target> &came_From, Target &current)
+{
+	vector<Target> total_Path;
+	total_Path.push_back(current);
+	while(!current.equals(start_point_)){
+		int ind = get_Index_From_Target(list_Target_, current);
+
+		if(ind == -1){
+			return total_Path;
+		}
+		
+		current = came_From[ind];
+		total_Path.push_back(current);
 	}
 
-	vector<Target> Graph::find_Path(){
-		vector<Target> path;
-		vector<Target> reverse_path;
-		Target current = end_point_;
-		int i;
-		path.push_back(end_point_);
-		while(!current.equals(start_point_)){
-			i=0;
-			while(!list_nodes_[i].get_Son().equals(current)){
-				++i;
+	total_Path.push_back(start_point_);
+	return total_Path;
+}
+
+// heuristic
+// Return the euclidean distance between the Target current_point and the end Target
+// current_point: the Target from wich we want to determine the heuristic
+double Graph::heuristic(Target &current_point)
+{
+	return current_point.euclidean_Distance(end_point_);
+}
+
+// get_Lowest_FScore
+// Return the index of the best Target to test considering his fScore
+// fScore: a vector containing the cost of getting from the start Target to the end Target passing by a given Target 
+// open_Target: the vector of the currently discovered Target that are not evalued yet
+int Graph::get_Lowest_FScore(vector<float> &fScore, vector<Target> &open_Target)
+{	
+	double min = INFINITY;
+	int index_Target = -1;
+
+	for(int i=0; i<fScore.size(); ++i){
+		if(exist(open_Target, list_Target_[i])){
+			if(fScore[i]<min){
+				min = fScore[i];
+				index_Target = i;
 			}
-			current = list_nodes_[i].get_Mother();
-			path.push_back(current);
 		}
-		path.push_back(start_point_);
-		for(int i=path.size()-1; i==0; --i){
-			reverse_path.push_back(path[i]);
+	}
+	return index_Target;
+}
+
+
+// get_Index_From_Target
+// Return the index of a Target in the list
+// list: a list of Targets
+// t: the target from wich we want the index
+int Graph::get_Index_From_Target(vector<Target> list, Target &t)
+{
+	for(int i=0; i<list.size(); ++i){
+		if(t.equals(list[i])){
+			return i;
 		}
-		return reverse_path;
 	}
+	return -1;
+}
 
-	//Getter
+// exist
+// Return true if the Target exist in the vector of Target, false otherwise
+// targets: the vector of Target in wich we want to test the existence of the Target
+// t: the target we want to test the existence of
+bool Graph::exist(vector<Target> &targets, Target &t)
+{
+	vector<Target>::iterator it;
 
+	for(it=targets.begin(); it!=targets.end(); ++it)
+		if(it->equals(t.get_Id()))
+			return true;
+	return false;
+}
 
-	//Setter
-	void Graph::set_Start_Point(Target &t){
-		start_point_ = t;
-		list_nodes_.resize(0);
-	}
+// exist
+// Return true if the Target with this id exist in the vector of Target, false otherwise
+// targets: the vector of Target in wich we want to test the existence of the Target
+// id_Target: the id of the target we want to test the existence of
+bool Graph::exist(vector<Target> &targets, int id_Target)
+{
+	vector<Target>::iterator it;
 
-	void Graph::set_End_Point(Target &t){
-		end_point_ = t;
-		list_nodes_.resize(0);
-	}
+	for(it=targets.begin(); it!=targets.end(); ++it)
+		if(it->equals(id_Target))
+			return true;
+	return false;
+}
+
+/*vector<Target> Graph::get_neighbor(vector<int> vec_id)
+{
+	vector<Target> vec;
+	vec.resize(vec_id.size());
+	for(int i = 0 ; i< vec_id.size(); ++i)
+		vec[i] = list_Target_[vec_id[i]];
+	return vec;
+}*/
+
+//Getter
+
+//Setter

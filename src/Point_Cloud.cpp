@@ -25,7 +25,8 @@
 		resolution_ = map.get_Resolution_Map();
 	}
 
-	
+	// create_Point_Cloud
+	// Return the created point's cloud
 	vector<Target> Point_Cloud::create_Point_Cloud()
 	{
 		int cpt_err_cons = 0;
@@ -66,7 +67,6 @@
 	    			cpt_err_cons = 0;
 	    			Target t = Target(nb_point++, 0, map_real_.pix_to_pose(x_rand, y_rand), orien);
 	    			targets_.push_back(t);
-	    			//printf("x :%d; y : %d\n", x_rand, y_rand);
 	    			fill_Circle(x_rand, y_rand);
 	    		} else{
 	    			++cpt_err_cons;
@@ -88,7 +88,6 @@
     		} else if(val_pix==100)
     		{
     			++cpt_err_cons;
-    			//printf("x :%d; y : %d\n", x_rand, y_rand);
     		}
 		}
 
@@ -100,7 +99,6 @@
 			}
 		}
 
-		//printf("%d\n", cpt_err_cons);
 		write_BMP(map_treatment_);
 		return targets_;
 	}
