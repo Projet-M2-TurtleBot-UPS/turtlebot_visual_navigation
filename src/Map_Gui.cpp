@@ -284,7 +284,7 @@ int Map_Gui::add_Line_strip_float (int id, vector<vector<float> > list_pos, vect
 	marker.header.stamp = ros::Time::now();
 	marker.ns = "Line_strip_smooth";
 	marker.id = id;
-	marker.type = visualization_msgs::Marker::LINE_STRIP;
+	marker.type = visualization_msgs::Marker::LINE_LIST;
 	marker.action = visualization_msgs::Marker::ADD;
 	marker.scale.x = SCALE_X_LINE;
 	marker.scale.y = SCALE_Y_LINE;
@@ -307,8 +307,19 @@ int Map_Gui::add_Line_strip_float (int id, vector<vector<float> > list_pos, vect
 	c.a= 1.0;
 
 
-	for(unsigned int j=0; j<list_pos.size(); ++j)
+	for(unsigned int j=1; j<list_pos.size(); ++j)
 	{
+		vector<float> posprev = list_pos[j-1];
+
+		geometry_msgs::Point pprev;
+		pprev.x= posprev[0];
+		pprev.y= posprev[1];
+		pprev.z= 0.01;
+
+		marker.points.push_back(pprev);
+
+		marker.colors.push_back(c);
+
 		vector<float> pos = list_pos[j];
 		geometry_msgs::Point p;
 		p.x= pos[0];
@@ -324,10 +335,8 @@ int Map_Gui::add_Line_strip_float (int id, vector<vector<float> > list_pos, vect
 
 	//Send msg
 	int i =0;
-	printf("a\n");
 	while(i<40)
 	{
-		printf("b\n");
 		vis_pub.publish( marker );
 		ros::Duration(0.1).sleep();
 		i++;
@@ -348,7 +357,7 @@ int Map_Gui::add_Line_strip (int id, vector<Target> list_Target, vector<float> c
 	marker.header.stamp = ros::Time::now();
 	marker.ns = "Line_strip";
 	marker.id = id;
-	marker.type = visualization_msgs::Marker::LINE_STRIP;
+	marker.type = visualization_msgs::Marker::LINE_LIST;
 	marker.action = visualization_msgs::Marker::ADD;
 	marker.scale.x = SCALE_X_LINE;
 	marker.scale.y = SCALE_Y_LINE;
@@ -371,9 +380,21 @@ int Map_Gui::add_Line_strip (int id, vector<Target> list_Target, vector<float> c
 	c.a= 1.0;
 
 
-	for(unsigned int j=0; j<list_Target.size(); ++j)
+	for(unsigned int j=1; j<list_Target.size(); ++j)
 	{
+		vector<float> posprev = list_Target[j-1].get_Position();
+
+		geometry_msgs::Point pprev;
+		pprev.x= posprev[0];
+		pprev.y= posprev[1];
+		pprev.z= 0.01;
+
+		marker.points.push_back(pprev);
+
+		marker.colors.push_back(c);
+
 		vector<float> pos = list_Target[j].get_Position();
+
 		geometry_msgs::Point p;
 		p.x= pos[0];
 		p.y= pos[1];

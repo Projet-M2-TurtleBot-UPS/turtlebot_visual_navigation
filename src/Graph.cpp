@@ -14,6 +14,7 @@ Graph::Graph(Target &start_point, Target &end_point, vector<Target> &list_Target
 	start_point_ = start_point;
 	end_point_ = end_point;
 	list_Target_= list_Target;
+	ar_Cost_ = AR_COST;
 }
 
 // a_star
@@ -38,18 +39,29 @@ vector<Target> Graph::a_Star()
 	
 	fScore[(fScore.size()-2)] = 0.0f;
 	
-	Target current;
+	Target current, previous;
 	current.set_Id_Failure();
 	vector<Target> failure;
-	
-	while (open_Target.size()!=0){
-		int index_Target  = get_Lowest_FScore(fScore, open_Target);
+
+	int index_Target  = get_Lowest_FScore(fScore, open_Target);
 		if(index_Target == -1){
 			return failure;
+		} else {
+			current = list_Target_[index_Target];
 		}
-		else {
-
-			current= list_Target_[index_Target];
+	
+	while (open_Target.size()!=0){
+		previous = current;
+		index_Target  = get_Lowest_FScore(fScore, open_Target);
+		if(index_Target == -1){
+			return failure;
+		} else {
+			current = list_Target_[index_Target];
+			if(current.get_Type() == 2){
+				ar_Cost_ = AR_COST;
+			} else {
+				ar_Cost_ -= previous.euclidean_Distance(current)*DISTANCE_COST;
+			}
 		}
 
 		if(current.equals(end_point_)){
@@ -78,7 +90,7 @@ vector<Target> Graph::a_Star()
 				
 				double tentative_gScore = gScore[index_Target] + current.euclidean_Distance(it)*DISTANCE_COST;
 				if(it.get_Type() == 2){
-					tentative_gScore += AR_COST;
+					tentative_gScore += ar_Cost_;
 				}
 
 				if(tentative_gScore < gScore[index_Neighbor]){

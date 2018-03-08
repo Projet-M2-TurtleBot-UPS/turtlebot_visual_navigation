@@ -144,9 +144,8 @@ int main(int argc, char **argv)
 				mapgui.add_Line_strip (0,path, color2);
 				ROS_INFO("... GENERATION SMOOTH PATH ...");
 				vector<vector<float > > smooth_path = Generator_smooth_Path(path,40);
-				/*ROS_INFO("... DISPLAY SMOOTH PATH ...");
-				for(int i =0; i<smooth_path.size()-1; ++i)
-					mapgui.add_Line (i, smooth_path[i],smooth_path[i+1], color2);*/
+				ROS_INFO("... DISPLAY SMOOTH PATH ...");
+				mapgui.add_Line_strip_float (0, smooth_path, green);
 
 			}
 

@@ -14,7 +14,7 @@
 
 # define DISTANCE_COST 3
 # define ROTATION_COST 20
-# define AR_COST -15
+# define AR_COST 30
 
 class Graph
 {
@@ -22,6 +22,7 @@ class Graph
 		Target start_point_;	// The position of the robot
 		Target end_point_;	// The position where we want the robot to go
 		vector<Target> list_Target_;	// The list of all the point of the point cloud
+		float ar_Cost_;	// current cost of trying to reach an ar-marker
 
 	public:
 
