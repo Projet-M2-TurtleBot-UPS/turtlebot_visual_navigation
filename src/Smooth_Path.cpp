@@ -183,6 +183,7 @@ static vector<float> genrator_Vector_Time(int nb_Points)
 static vector<vector<float> > Generator_smooth_Path(vector<Target> list, int nb_Points)
 {
 	vector<vector<float> > res;
+	res.resize(0);
 	vector<vector<float> > list_position = Make_List_Handles(list);
 
 	vector<float> vector_time = genrator_Vector_Time (nb_Points);

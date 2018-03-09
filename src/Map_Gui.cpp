@@ -41,26 +41,30 @@ int Map_Gui::add_Object (int id,int type,vector<float> position, vector<float> o
 {
 	//Init variables
 	int i = 0;
+	int sizePos = position.size();
+	int sizeOri = orientation.size();
+	int sizeSca = scale.size();
+	int sizeCol = color.size();
 
 	//Verification
 	if(position.size()!=3 )
 	{
-		ROS_ERROR("[ Add_object ]Error: size Position (%d to 3).",position.size());
+		ROS_ERROR("[ Add_object ]Error: size Position (%d to 3).",sizePos);
 		return -1;
 	}
 	if(orientation.size()!=4 )
 	{
-		ROS_ERROR("[ Add_object ]Error: size Orientation (%d to 4).",orientation.size());
+		ROS_ERROR("[ Add_object ]Error: size Orientation (%d to 4).",sizeOri);
 		return -2;
 	}
 	if(scale.size()!=3 )
 	{
-		ROS_ERROR("[ Add_object ]Error: size scale (%d to 3).",scale.size());
+		ROS_ERROR("[ Add_object ]Error: size scale (%d to 3).",sizeSca);
 		return -3;
 	}
 	if(color.size()!=3 )
 	{
-		ROS_ERROR("[ Add_object ]Error: size Color (%d to 3).",color.size());
+		ROS_ERROR("[ Add_object ]Error: size Color (%d to 3).",sizeCol);
 		return -4;
 	}
 
@@ -276,13 +280,13 @@ int Map_Gui::add_Line (int id,vector<float> start, vector<float> end, vector<flo
 //Add_Line_Strip
 //add a list object of type line on map.
 //
-int Map_Gui::add_Line_strip_float (int id, vector<vector<float> > list_pos, vector<float> color_RGBA)
+int Map_Gui::add_Line_List_float (int id, vector<vector<float> > list_pos, vector<float> color_RGBA)
 {
 	//Init MSG
 	visualization_msgs::Marker marker;
 	marker.header.frame_id = "/map";
 	marker.header.stamp = ros::Time::now();
-	marker.ns = "Line_strip_smooth";
+	marker.ns = "Smooth_Path";
 	marker.id = id;
 	marker.type = visualization_msgs::Marker::LINE_LIST;
 	marker.action = visualization_msgs::Marker::ADD;
@@ -294,9 +298,9 @@ int Map_Gui::add_Line_strip_float (int id, vector<vector<float> > list_pos, vect
 	marker.pose.orientation.z = 0.0f;
 	marker.pose.orientation.w = 1.0f;
 
-	
+	marker.scale.x = 0.1;
 	marker.color.a = 1.0; // Don't forget to set the alpha!
-	marker.color.r = 0.0;
+	marker.color.r = 1.0;
 	marker.color.g = 0.0;
 	marker.color.b = 0.0;
 
@@ -307,7 +311,7 @@ int Map_Gui::add_Line_strip_float (int id, vector<vector<float> > list_pos, vect
 	c.a= 1.0;
 
 
-	for(unsigned int j=1; j<list_pos.size(); ++j)
+	for(unsigned int j=1; j<list_pos.size()-42; ++j)
 	{
 		vector<float> posprev = list_pos[j-1];
 
@@ -316,6 +320,7 @@ int Map_Gui::add_Line_strip_float (int id, vector<vector<float> > list_pos, vect
 		pprev.y= posprev[1];
 		pprev.z= 0.01;
 
+        printf("%d = [%f,%f]\n", j-1,pprev.x,pprev.y);
 		marker.points.push_back(pprev);
 
 		marker.colors.push_back(c);
@@ -335,13 +340,12 @@ int Map_Gui::add_Line_strip_float (int id, vector<vector<float> > list_pos, vect
 
 	//Send msg
 	int i =0;
-	while(i<40)
+	while(i<2)
 	{
 		vis_pub.publish( marker );
 		ros::Duration(0.1).sleep();
 		i++;
 	}
-
 	return 0;
 }
 
@@ -349,13 +353,13 @@ int Map_Gui::add_Line_strip_float (int id, vector<vector<float> > list_pos, vect
 //Add_Line_Strip
 //add a list object of type line on map.
 //
-int Map_Gui::add_Line_strip (int id, vector<Target> list_Target, vector<float> color_RGBA)
+int Map_Gui::add_Line_List (int id, vector<Target> list_Target, vector<float> color_RGBA)
 {
 	//Init MSG
 	visualization_msgs::Marker marker;
 	marker.header.frame_id = "/map";
 	marker.header.stamp = ros::Time::now();
-	marker.ns = "Line_strip";
+	marker.ns = "Path";
 	marker.id = id;
 	marker.type = visualization_msgs::Marker::LINE_LIST;
 	marker.action = visualization_msgs::Marker::ADD;

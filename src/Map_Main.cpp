@@ -141,11 +141,11 @@ int main(int argc, char **argv)
 				ROS_INFO(" [ROBOT] \"Impossible de trouver un chemin pour aller du start_point au end_point...\"\n");
 			} else {
 				ROS_INFO("... DISPLAY PATH ...");
-				mapgui.add_Line_strip (0,path, color2);
+				mapgui.add_Line_List (0,path, color2);
 				ROS_INFO("... GENERATION SMOOTH PATH ...");
 				vector<vector<float > > smooth_path = Generator_smooth_Path(path,40);
 				ROS_INFO("... DISPLAY SMOOTH PATH ...");
-				mapgui.add_Line_strip_float (0, smooth_path, green);
+				mapgui.add_Line_List_float (1, smooth_path, green);
 
 			}
 

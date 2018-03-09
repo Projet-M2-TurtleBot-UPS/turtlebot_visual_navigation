@@ -111,7 +111,11 @@ vector<Target> Graph::a_Star()
 // current: the end Target
 vector<Target> Graph::reconstruct_path(vector<Target> &came_From, Target &current)
 {
-	vector<Target> total_Path;
+	
+
+  vector<Target> total_Path;
+  vector<Target> res;
+
 	total_Path.push_back(current);
 	while(!current.equals(start_point_)){
 		int ind = get_Index_From_Target(list_Target_, current);
@@ -125,7 +129,12 @@ vector<Target> Graph::reconstruct_path(vector<Target> &came_From, Target &curren
 	}
 
 	total_Path.push_back(start_point_);
-	return total_Path;
+
+	for (unsigned int i=total_Path.size()-1 ; i>0;i--)
+	{
+	    res.push_back( total_Path[i]);
+	} 
+	return res;
 }
 
 // heuristic
