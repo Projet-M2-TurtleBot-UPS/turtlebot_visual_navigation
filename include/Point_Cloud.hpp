@@ -2,7 +2,7 @@
 /*                             Point_Cloud.hpp                         */
 /***********************************************************************/
 /* -VERSION: ROS_Ubuntu 14.04                                          */
-/* -AUTHOR:  GUILLAUME Sylvain                                         */
+/* -AUTHOR:  BREFEL Hugo                                         */
 /* -LAST_MODIFICATION: 12/2017                                         */
 /***********************************************************************/
 #ifndef POINT_CLOUD_H

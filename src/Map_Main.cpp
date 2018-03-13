@@ -7,6 +7,7 @@
 # include "Graph.hpp"
 # include "Set_Marker.hpp"
 # include "Recherche.hpp"
+# include "Follow_Path.hpp"
 
 # include "Smooth_Path.cpp"
 
@@ -37,7 +38,7 @@ void localisation(Recherche recherche){
 	current_State = PATH_GENERATION_STATE;
 }
 
-void path_Generation(Map_node node, Map_Gui mapgui, vector<Target> list_Markers){
+vector<vector<float> > path_Generation(Map_node node, Map_Gui mapgui, vector<Target> list_Markers){
 	vector<Target> list_Target;
 
 	vector<float> orientation ;
@@ -102,6 +103,7 @@ void path_Generation(Map_node node, Map_Gui mapgui, vector<Target> list_Markers)
 
 	if(path.size() == 0){
 		ROS_INFO(" [ROBOT] \"Impossible de trouver un chemin pour aller du start_point au end_point...\"\n");
+		exit(0);
 	} else {
 		ROS_INFO("... DISPLAY PATH ...");
 		mapgui.add_Line_List (0,path, color2);
@@ -109,8 +111,10 @@ void path_Generation(Map_node node, Map_Gui mapgui, vector<Target> list_Markers)
 		vector<vector<float > > smooth_path = Generator_smooth_Path(path,40);
 		ROS_INFO("... DISPLAY SMOOTH PATH ...");
 		mapgui.add_Line_List_float (1, smooth_path, green);
+		current_State = MOVEMENT_STATE;
+		return smooth_path;
 	}
-	current_State = MOVEMENT_STATE;
+	
 }
 
 void movement(){
@@ -129,8 +133,10 @@ int main(int argc, char **argv)
 	Map_Gui mapgui(nh);
 	Set_Marker sm(nh);
 	Recherche recherche(nh);
+	Follow_Path followPath(nh);
 
 	vector<Target> list_Markers;
+	vector<vector<float> > path;
 	list_Markers = sm.init_Markers();
 
 	ros::Rate loop_rate(2);
@@ -146,10 +152,14 @@ int main(int argc, char **argv)
 				localisation(recherche);
 				break;
 			case PATH_GENERATION_STATE:
-				path_Generation(node, mapgui, list_Markers);
+				path = path_Generation(node, mapgui, list_Markers);
 				break;
 			case MOVEMENT_STATE:
-				movement();
+				ROS_INFO("... MOVING ...");
+				for(unsigned int i=0;i<path.size();++i)
+				{
+					followPath.goToPoint(path[i]);
+				}
 				break;
 			case OBSTACLE_POSITIONNING_STATE:
 				obstacle_Positionning();

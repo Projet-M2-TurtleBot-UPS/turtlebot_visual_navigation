@@ -13,9 +13,9 @@
 #include "visualization_msgs/Marker.h"
 #include <fstream>
 
-# define SCALE_X_TARGET 0.2
-# define SCALE_Y_TARGET 0.2
-# define SCALE_Z_TARGET 0.02
+# define SCALE_X_TARGET 0.2	// length of the target on RVIZ
+# define SCALE_Y_TARGET 0.2	// width of the target on RVIZ
+# define SCALE_Z_TARGET 0.02	// height of the target on RVIZ
 
 using namespace std;
 
