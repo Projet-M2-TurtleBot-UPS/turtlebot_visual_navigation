@@ -13,10 +13,10 @@
 # include "Map_node.hpp"
 # include "Toolbox.hpp"
 
-# define DISTANCE_COST 3	// cost of a linear movement
+# define DISTANCE_COST 7	// cost of a linear movement
 # define ROTATION_COST 20	// cost of a rotation (not used)
-# define AR_COST 10	// cost of a marker after a localisation (= maximum cost)
-# define ANGLE_VISIBILITY_AR 0.5	// half of the angle of visibility of markers
+# define AR_COST 20	// cost of a marker after a localisation (= maximum cost)
+# define ANGLE_VISIBILITY_AR 0.3	// half of the angle of visibility of markers
 # define PI 3.1416
 
 class Graph
