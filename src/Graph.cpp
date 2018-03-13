@@ -1,9 +1,9 @@
 /***********************************************************************/
-/*                          Create_Graph.cpp                            	   */
+/*                          Graph.cpp                           	   */
 /***********************************************************************/
 /* -VERSION: ROS_Ubuntu 14.04                                          */
 /* -AUTHOR:  BREFEL Hugo                                      		   */
-/* -LAST_MODIFICATION: 01/2018                                         */
+/* -LAST_MODIFICATION: 03/2018                                         */
 /***********************************************************************/
 
 # include "Graph.hpp"
@@ -15,6 +15,7 @@ Graph::Graph(Target &start_point, Target &end_point, vector<Target> &list_Target
 	end_point_ = end_point;
 	list_Target_= list_Target;
 	ar_Cost_ = AR_COST;
+	tb_ = Toolbox();
 }
 
 // a_star
@@ -90,7 +91,7 @@ vector<Target> Graph::a_Star()
 				
 				double tentative_gScore = gScore[index_Target] + current.euclidean_Distance(it)*DISTANCE_COST;
 				if(it.get_Type() == 2){
-					tentative_gScore += ar_Cost_;
+					tentative_gScore += cost_Marker(current, it);
 				}
 
 				if(tentative_gScore < gScore[index_Neighbor]){
@@ -128,13 +129,33 @@ vector<Target> Graph::reconstruct_path(vector<Target> &came_From, Target &curren
 		total_Path.push_back(current);
 	}
 
-	total_Path.push_back(start_point_);
-
-	for (unsigned int i=total_Path.size()-1 ; i>0;i--)
+	for (unsigned int i=total_Path.size()-1 ; i>0;--i)
 	{
-	    res.push_back( total_Path[i]);
-	} 
+	    res.push_back(total_Path[i]);
+	}
+	
+	res.push_back(total_Path[0]);
+
 	return res;
+}
+
+// cost_Marker
+// Return the cost of going to a marker in a way we can use it (visibility angle)
+// mother: the Target from wich we want to go the marker
+// marker: the Target marker to wich we want to go
+double Graph::cost_Marker(Target &mother, Target &marker){
+	double cost;
+	float angle, signe;
+
+	vector<float> mother_marker = tb_.vector_AB(marker.get_Position(), mother.get_Position());
+	vector<float> marker_vision = tb_.vector_vision(marker.get_Orientation()[2]);
+	angle = tb_.calculate_angle(marker_vision, mother_marker);
+	if(angle > ANGLE_VISIBILITY_AR || angle < -ANGLE_VISIBILITY_AR){
+		cost = INFINITY;
+	} else {
+		cost = ar_Cost_;
+	}
+	return cost;
 }
 
 // heuristic

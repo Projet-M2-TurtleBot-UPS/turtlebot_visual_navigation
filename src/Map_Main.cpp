@@ -5,10 +5,9 @@
 # include "Image_processing.hpp"
 # include "Point_Cloud.hpp"
 # include "Graph.hpp"
-
+# include "Set_Marker.hpp"
 
 # include "Smooth_Path.cpp"
-
 
 int main(int argc, char **argv)
 {
@@ -18,10 +17,10 @@ int main(int argc, char **argv)
 	Map_Gui mapgui(nh);
 	vector<Target> list_Target;
 	vector<Target> list_Markers;
+	Set_Marker sm(nh);
 	ros::Rate loop_rate(2);
-	int id_curr = 6;
 	
-	vector<float> position;
+	/*vector<float> position;
 	position.push_back(0.0f);
 	position.push_back(0.0f);
 	position.push_back(0.0f);
@@ -49,12 +48,12 @@ int main(int argc, char **argv)
 	vector<float> position5;
 	position5.push_back(-2.0f);
 	position5.push_back(1.0f);
-	position5.push_back(0.0f);
+	position5.push_back(0.0f);*/
 
 	vector<float> orientation ;
 	orientation.push_back(0.0f);
 	orientation.push_back(0.0f);
-	orientation.push_back(0.0f);
+	orientation.push_back(-1.57f);
 	orientation.push_back(1.0f);
 
 	vector<float> color2;
@@ -67,27 +66,19 @@ int main(int argc, char **argv)
 	green.push_back(1.0);
 	green.push_back(0.0);
 
-	//list_Target.push_back(Target(0,1,position,orientation));
-	list_Markers.push_back(Target(0,2,position1,orientation));
-	list_Markers.push_back(Target(1,2,position2,orientation));
-	/*list_Target.push_back(Target(3,0,position3,orientation));
-	list_Target.push_back(Target(4,0,position4,orientation));
-	list_Target.push_back(Target(5,0,position5,orientation));*/
-	 
-	//create_Filter_Turtlebot2(0.354f,0.05f);
+	/*list_Markers.push_back(Target(0,2,position1,orientation));
+	list_Markers.push_back(Target(1,2,position2,orientation));*/
+
+	list_Markers = sm.init_Markers();
 
 	vector<float> start_point;
-	//start_point.push_back(-4.5f);
-	//start_point.push_back(-1.0f);
 	start_point.push_back(-2.2f);
 	start_point.push_back(1.5f);
 	start_point.push_back(0.0f);
 
 	vector<float> end_point;
-	//end_point.push_back(1.0f);
-	//end_point.push_back(-0.8f);
-	end_point.push_back(-10.0f);
-	end_point.push_back(-4.5f);
+	end_point.push_back(-9.45f);
+	end_point.push_back(-3.35f);
 	end_point.push_back(0.0f);
 
 	while(ros::ok())
@@ -104,6 +95,7 @@ int main(int argc, char **argv)
 			ROS_INFO("... GENERATION PRM ...");
 			Point_Cloud p_C = Point_Cloud(node, list_Markers, start_point);
 			list_Target = p_C.create_Point_Cloud();
+
 			Target start_target = Target(list_Target.size()+list_Markers.size(), 1, start_point, orientation);
 			Target end_target = Target(list_Target.size()+1+list_Markers.size(), 3, end_point, orientation);
 			list_Target.push_back(start_target);
@@ -122,11 +114,10 @@ int main(int argc, char **argv)
 					Target b = list_Target[j];
 					if(!node.is_intersection(a.get_Position(),b.get_Position(),2.5))
 					{
-						//Line line(id_curr,*it1,*it2,color2);
 						list_Target[i].add_Son(j);
 						list_Target[j].add_Son(i);
-						//mapgui.add_Line(i*list_Target.size()+j,list_Target[i],list_Target[j],color2);
-						//id_curr++;
+						/* ROS_INFO("... DISPLAY GRAPH ...")
+						mapgui.add_Line(i*list_Target.size()+j,list_Target[i],list_Target[j],color2);*/
 					}
 				}
 			}
@@ -134,8 +125,6 @@ int main(int argc, char **argv)
 			ROS_INFO("... A* ...");
 			Graph graph = Graph(start_target, end_target, list_Target);
 			vector<Target> path = graph.a_Star();
-
-			
 
 			if(path.size() == 0){
 				ROS_INFO(" [ROBOT] \"Impossible de trouver un chemin pour aller du start_point au end_point...\"\n");

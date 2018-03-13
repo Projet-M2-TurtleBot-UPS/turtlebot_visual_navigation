@@ -6,15 +6,18 @@
 /* -LAST_MODIFICATION: 01/2018                                         */
 /***********************************************************************/
 
-#ifndef CREATE_GRAPH_H
-#define CREATE_GRAPH_H
+#ifndef GRAPH_H
+#define GRAPH_H
 
 # include "Target.hpp"
 # include "Map_node.hpp"
+# include "Toolbox.hpp"
 
-# define DISTANCE_COST 3
-# define ROTATION_COST 20
-# define AR_COST 30
+# define DISTANCE_COST 3	// cost of a linear movement
+# define ROTATION_COST 20	// cost of a rotation (not used)
+# define AR_COST 10	// cost of a marker after a localisation (= maximum cost)
+# define ANGLE_VISIBILITY_AR 0.5	// half of the angle of visibility of markers
+# define PI 3.1416
 
 class Graph
 {
@@ -23,6 +26,7 @@ class Graph
 		Target end_point_;	// The position where we want the robot to go
 		vector<Target> list_Target_;	// The list of all the point of the point cloud
 		float ar_Cost_;	// current cost of trying to reach an ar-marker
+		Toolbox tb_;	// the toolbox containing usefull functions
 
 	public:
 
@@ -37,6 +41,7 @@ class Graph
 		vector<Target> a_Star();
 		void init_Sons(vector<Target> closed_Target, Target &current);
 		vector<Target> reconstruct_path(vector<Target> &came_From, Target &current);
+		double cost_Marker(Target &mother, Target &marker);
 		double heuristic(Target &current_point);
 		int get_Lowest_FScore(vector<float> &fScore, vector<Target> &closed_Target);
 

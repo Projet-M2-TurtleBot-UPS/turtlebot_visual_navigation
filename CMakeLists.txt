@@ -141,13 +141,13 @@ include_directories(
 ## either from message generation or dynamic reconfigure
 
 ## Declare a C++ executable
-add_executable(map_node  src/Map_Main.cpp src/Line.cpp src/Target.cpp src/Map_node.cpp src/Map_Gui.cpp src/Image_processing.cpp src/Point_Cloud src/Graph.cpp src/Smooth_Path.cpp)
+add_executable(Navigation  src/Map_Main.cpp src/Toolbox.cpp src/Line.cpp src/Target.cpp src/Map_node.cpp src/Map_Gui.cpp src/Image_processing.cpp src/Point_Cloud src/Graph.cpp src/Smooth_Path.cpp src/Set_Marker.cpp)
 
 
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
-add_dependencies(map_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(Navigation ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 
 
@@ -155,7 +155,7 @@ add_dependencies(map_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_
 # target_link_libraries(turtlebot_proj_nav_node
 #   ${catkin_LIBRARIES}
 # )
-target_link_libraries(map_node -g
+target_link_libraries(Navigation -g
   ${catkin_LIBRARIES}
 )
 

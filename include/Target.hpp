@@ -1,12 +1,12 @@
 /***********************************************************************/
-/*                             Target.cpp                              */
+/*                             Target.hpp                              */
 /***********************************************************************/
 /* -VERSION: ROS_Ubuntu 14.04                                          */
 /* -AUTHOR:  GUILLAUME Sylvain                                         */
 /* -LAST_MODIFICATION: 12/2017                                         */
 /***********************************************************************/
-#ifndef MAP_TARGET_H
-#define MAP_TARGET_H
+#ifndef TARGET_H
+#define TARGET_H
 
 #include "ros/ros.h"
 #include "std_msgs/String.h"
@@ -38,7 +38,7 @@ class Target
 		Target(){};
 
 		//Destructor
-		~Target();
+		~Target(){};
 
 		//Operator
 		visualization_msgs::Marker create_MSG_Marker ();
@@ -65,4 +65,4 @@ class Target
 };
 
 
-#endif //MAP_TARGET_H
+#endif //TARGET_H

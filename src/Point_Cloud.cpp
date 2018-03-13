@@ -8,10 +8,6 @@
 
 # include "Point_Cloud.hpp"
 
-# define SIZE_FILTER_NEIGHBOR 4
-# define VISIBILITY 20
-# define NB_ERR_CONS 8000
-
 //Constructor
 	Point_Cloud::Point_Cloud(Map_node &map, vector<Target> &markers, vector<float> &start_point)
 	{
@@ -72,7 +68,7 @@
 	    			++cpt_err_cons;
 	    		}
 
-	    	// We want to place a new target in an area if visibility
+	    	// We want to place a new target in an area of visibility
     		} else if (val_pix==50 && map_real_.is_Location_Ok(x_rand, y_rand, SIZE_FILTER_NEIGHBOR))
     		{
     			if(is_Target_Redundant(x_rand, y_rand) || (!is_Target_Connected_Pix(x_rand, y_rand))){

@@ -311,7 +311,7 @@ int Map_Gui::add_Line_List_float (int id, vector<vector<float> > list_pos, vecto
 	c.a= 1.0;
 
 
-	for(unsigned int j=1; j<list_pos.size()-42; ++j)
+	for(unsigned int j=1; j<list_pos.size(); ++j)
 	{
 		vector<float> posprev = list_pos[j-1];
 
@@ -320,7 +320,6 @@ int Map_Gui::add_Line_List_float (int id, vector<vector<float> > list_pos, vecto
 		pprev.y= posprev[1];
 		pprev.z= 0.01;
 
-        printf("%d = [%f,%f]\n", j-1,pprev.x,pprev.y);
 		marker.points.push_back(pprev);
 
 		marker.colors.push_back(c);

@@ -1,5 +1,5 @@
 /***********************************************************************/
-/*                             Point_Cloud.hpp                              */
+/*                             Point_Cloud.hpp                         */
 /***********************************************************************/
 /* -VERSION: ROS_Ubuntu 14.04                                          */
 /* -AUTHOR:  GUILLAUME Sylvain                                         */
@@ -16,6 +16,10 @@
 #include <fstream>
 #include <cstdlib>
 #include <ctime>
+
+# define SIZE_FILTER_NEIGHBOR 4	// taille du filtre de voisinage
+# define VISIBILITY 20	// the minimal distance between two points of the point cloud
+# define NB_ERR_CONS 8000	// number of consecutive error while trying to add a point before we stop the algorithm
 
 using namespace std;
 

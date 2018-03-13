@@ -26,10 +26,6 @@
 		}
 	}
 
-//Destructor
-
-	Target::~Target(){}
-
 //Create_MSG_Marker
 //this fonction creates a visualization_msg  of the target
 	visualization_msgs::Marker Target::create_MSG_Marker ()
