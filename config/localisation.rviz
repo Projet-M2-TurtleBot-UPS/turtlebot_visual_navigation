@@ -81,6 +81,18 @@ Visualization Manager:
           Value: true
         marker_1:
           Value: true
+        marker_2:
+          Value: true
+        marker_3:
+          Value: true
+        marker_4:
+          Value: true
+        marker_5:
+          Value: true
+        marker_6:
+          Value: true
+        marker_7:
+          Value: true
       Marker Scale: 1
       Name: TF
       Show Arrows: true
@@ -91,6 +103,18 @@ Visualization Manager:
           marker_0:
             {}
           marker_1:
+            {}
+          marker_2:
+            {}
+          marker_3:
+            {}
+          marker_4:
+            {}
+          marker_5:
+            {}
+          marker_6:
+            {}
+          marker_7:
             {}
       Update Interval: 0
       Value: true
@@ -237,7 +261,7 @@ Visualization Manager:
       Unreliable: false
       Value: true
     - Class: rviz/Image
-      Enabled: true
+      Enabled: false
       Image Topic: /camera/rgb/image_rect_mono
       Max Value: 1
       Median window: 5
@@ -247,13 +271,14 @@ Visualization Manager:
       Queue Size: 2
       Transport Hint: raw
       Unreliable: false
-      Value: true
+      Value: false
     - Class: rviz/Marker
       Enabled: true
       Marker Topic: visualization_marker
       Name: Marker
       Namespaces:
         Path: true
+        Smooth_Path: true
         target_List: true
       Queue Size: 100
       Value: true
@@ -284,7 +309,7 @@ Visualization Manager:
         Value: false
       Name: Current View
       Near Clip Distance: 0.01
-      Scale: 43.9453
+      Scale: 30.4844
       Target Frame: <Fixed Frame>
       Value: TopDownOrtho (rviz)
       X: -1.94865
