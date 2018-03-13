@@ -16,10 +16,13 @@
 
 #define V_LIN_MAX 0.5                       // Seuil maximum pour la vitesse linéaire
 #define V_LIN_MIN 0.3                       // Seuil minimum pour la vitesse linéaire
-#define V_ANG 0.7                           // Vitesse angulaire du turtlebot TODO
-#define SEUIL_MAX 4.0                       // Seuil à partir duquel on fait baisser la vitesse
-#define SEUIL_MIN 3.0                       // Seuil à partir duquel la vitesse du robot doit être minimale
-#define SEUIL_CRIT 0.6                      // Seuil critique pour atteindre l'amer (on ne doit pas aller plus loin)
+#define V_ANG_MAX 1.4                       // Vitesse angulaire du turtlebot
+#define V_ANG_MIN 0.7                       // Vitesse angulaire du turtlebot
+#define SEUIL_LIN_MAX 4.0                   // Seuil à partir duquel on fait baisser la vitesse linéaire
+#define SEUIL_LIN_MIN 3.0                   // Seuil à partir duquel la vitesse linéaire du robot doit être minimale
+#define SEUIL_ANG_MAX 0.1                   // Seuil à partir duquel on fait baisser la vitesse angulaire
+#define SEUIL_ANG_MIN 0.02                  // Seuil à partir duquel la vitesse angulaire du robot doit être minimale
+#define SEUIL_CRIT 0.5                      // Seuil critique pour atteindre l'amer (on ne doit pas aller plus loin)
 #define BASE_ROBOT 0.075                    // Distance camera - centre du robot
 #define ETAT_RECHERCHE 0                    // Etat dans lequel le robot recherche un amer
 #define ETAT_ASSERVISSEMENT 1               // Etat dans lequel le robot s'asservit sur un amer
@@ -58,6 +61,8 @@ class Recherche
 
     // Operators
     double calculateAngle(float x, float y, float z, float w);
+    int signe(double val);
+    double calculVitesseAngulaire();
     void rechercherAmer();
     void asservissementAmer();
     void start();

@@ -85,6 +85,31 @@ double Recherche::calculateAngle(float x, float y, float z, float w) {
   return (yaw + M_PI);              // angle between [0 ; 2Pi]
 }
 
+// Returns the signe of -val-
+int Recherche::signe(double val) {
+  if (val > 0) {
+    return 1;
+  } else if (val < 0) {
+    return -1;
+  } else {
+    return 0;
+  }
+}
+
+// Returns the angular speed of the robot, depending on the amer position on horizontal axis
+double Recherche::calculVitesseAngulaire() {
+  double pente_ang = (V_ANG_MAX - V_ANG_MIN) / (SEUIL_ANG_MAX - SEUIL_ANG_MIN);
+  double vitesse = 0.0;
+  if ((this->Marker_Position_[0] > SEUIL_ANG_MAX) || (this->Marker_Position_[0] < -SEUIL_ANG_MAX)) {
+    vitesse = -signe(this->Marker_Position_[0]) * V_ANG_MAX;
+  } else if ((this->Marker_Position_[0] > SEUIL_ANG_MIN) || (this->Marker_Position_[0] < -SEUIL_ANG_MIN)) {
+    vitesse = pente_ang * this->Marker_Position_[0];
+  } else {
+    vitesse = -signe(this->Marker_Position_[0]) * V_ANG_MIN;
+  }
+  return vitesse;
+}
+
 // Makes the TurtleBot turns on itself until it sees an amer
 void Recherche::rechercherAmer() {
   printf("... RECHERCHE AMER ...\n");
@@ -100,7 +125,6 @@ void Recherche::rechercherAmer() {
     angle_courant = calculateAngle(this->odom_message_.pose.pose.orientation.x, this->odom_message_.pose.pose.orientation.y, this->odom_message_.pose.pose.orientation.z, this->odom_message_.pose.pose.orientation.w);
     if (((cpt < 100000) && (cpt > 200)) && ((angle_courant < angle_depart) || (angle_courant > (angle_depart + seuil)))) {
       found = false;
-      //exit(0);
     }
     else {
       sendTwistMessage(0.0, 1.0);
@@ -123,44 +147,30 @@ void Recherche::rechercherAmer() {
 void Recherche::asservissementAmer() {
   printf("... ASSERVISSEMENT SUR L'AMER ...\n");
   ros::Duration(0.05).sleep();
-  double vitesse = V_LIN_MAX;
-  double pente = (V_LIN_MAX - V_LIN_MIN) / (SEUIL_MAX - SEUIL_MIN);
-  // on avance de V_LIN_MAX m/s jusqu'à distance_amer = SEUIL_MAX
-  while ((this->Marker_Position_[2]-BASE_ROBOT) > SEUIL_MAX) {
-    if (this->Marker_Position_[0] < 0) {
-      sendTwistMessage(V_LIN_MAX, V_ANG);
-    } else if (this->Marker_Position_[0] > 0) {
-      sendTwistMessage(V_LIN_MAX, -V_ANG);
-    } else {
-      sendTwistMessage(V_LIN_MAX, 0.0);
-    }
+  double vitesse_lin = V_LIN_MAX;
+  double vitesse_ang = V_ANG_MIN;
+  double pente_lin = (V_LIN_MAX - V_LIN_MIN) / (SEUIL_LIN_MAX - SEUIL_LIN_MIN);
+  // on avance de V_LIN_MAX m/s jusqu'à distance_amer = SEUIL_LIN_MAX
+  while ((this->Marker_Position_[2]-BASE_ROBOT) > SEUIL_LIN_MAX) {
+    vitesse_ang = calculVitesseAngulaire();
+    sendTwistMessage(V_LIN_MAX, vitesse_ang);
     ros::spinOnce();
     ros::Duration(0.05).sleep();
   }
-  // on avance avec une vitesse dégressive jusqu'à (vitesse = V_LIN_MIN || distance_amer <= SEUIL_MIN)
-  while ((vitesse > V_LIN_MIN) && ((this->Marker_Position_[2]-BASE_ROBOT) > SEUIL_MIN)) {
-    // on met à jour la vitesse
-    vitesse = pente * (this->Marker_Position_[2]-BASE_ROBOT);
-    vitesse = V_LIN_MIN;
-    if (this->Marker_Position_[0] < 0) {
-      sendTwistMessage(vitesse, V_ANG);
-    } else if (this->Marker_Position_[0] > 0) {
-      sendTwistMessage(vitesse, -V_ANG);
-    } else {
-      sendTwistMessage(vitesse, 0.0);
-    }
+  // on avance avec une vitesse linéaire dégressive jusqu'à (vitesse = V_LIN_MIN || distance_amer <= SEUIL_LIN_MIN)
+  while ((vitesse_lin > V_LIN_MIN) && ((this->Marker_Position_[2]-BASE_ROBOT) > SEUIL_LIN_MIN)) {
+    // on met à jour la vitesse linéaire
+    vitesse_lin = pente_lin * (this->Marker_Position_[2]-BASE_ROBOT);
+    vitesse_lin = V_LIN_MIN;
+    vitesse_ang = calculVitesseAngulaire();
+    sendTwistMessage(vitesse_lin, vitesse_ang);
     ros::spinOnce();
     ros::Duration(0.05).sleep();
   }
-  // on avance à vitesse = V_LIN_MIN jusqu'à distance_amer = SEUIL_CRIT
+  // on avance à vitesse_lin = V_LIN_MIN jusqu'à distance_amer = SEUIL_CRIT
   while ((this->Marker_Position_[2]-BASE_ROBOT) > SEUIL_CRIT) {
-    if (this->Marker_Position_[0] < 0) {
-      sendTwistMessage(V_LIN_MIN, V_ANG);
-    } else if (this->Marker_Position_[0] > 0) {
-      sendTwistMessage(V_LIN_MIN, -V_ANG);
-    } else {
-      sendTwistMessage(V_LIN_MIN, 0.0);
-    }
+    vitesse_ang = calculVitesseAngulaire();
+    sendTwistMessage(V_LIN_MIN, vitesse_ang);
     ros::spinOnce();
     ros::Duration(0.05).sleep();
   }
@@ -183,18 +193,12 @@ void Recherche::start() {
     switch(getEtat()) {
       case ETAT_RECHERCHE:
         rechercherAmer();
-        amer = getMarkerPosition();
-        printf("( %lf , %lf , %lf )\n", amer[0], amer[1], amer[2]);
         break;
       case ETAT_ASSERVISSEMENT:
         asservissementAmer();
-        amer = getMarkerPosition();
-        printf("( %lf , %lf , %lf )\n", amer[0], amer[1], amer[2]);
         break;
       default:
         rechercherAmer();
-        amer = getMarkerPosition();
-        printf("( %lf , %lf , %lf )\n", amer[0], amer[1], amer[2]);
         break;
     }
     ros::Duration(1).sleep();
