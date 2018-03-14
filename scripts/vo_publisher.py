@@ -14,6 +14,10 @@ pub = rospy.Publisher('/vo',Odometry, queue_size=20)
 #frame definition
 frame_id = '/base_footprint'
 
+#transformation de tf
+
+transform = tf.TransformListener()
+
 #covariance matrix, this must be determined ????
 P = np.mat(np.diag([0.1]*6))
 P = np.array(P).reshape(6, 6)
@@ -49,7 +53,7 @@ if __name__=="__main__":
 				else:
 					continue
 				# This is a well unknown tag in the map
-				listener.waitForTransform('/map', '/marker_1', now, rospy.Duration(1000))
+				listener.waitForTransform('/map', '/marker_1', now, rospy.Duration(1))
 				(tran, rott) = listener.lookupTransform('/map','/marker_1', now)
 				tran_markmap = listener.fromTranslationRotation(tran,rott)
 				rospy.loginfo(tran_markmap)
