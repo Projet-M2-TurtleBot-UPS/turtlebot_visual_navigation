@@ -38,8 +38,14 @@ P_twist = np.array(P_twist).reshape(6, 6)
 alvar_matrices={}
 
 #dictionary for landmarks postion on the map
-
-ldmark = {}
+ldmark = {'marker_0':((3.826, -0.720, 0.31),(0.0, 0.0, 1.0, -0.009)),
+          'marker_1':((2.590, -5.707, 0.31),(0.0, 0.0, 0.990, 0.144)),
+          'marker_2':((-0.949, -0.891, 0.31), (0.0, 0.0, -0.792, 0.611)),
+          'marker_3':((-1.808,-4.031,0.31), (0.0, 0.0,0.608,0.793)),
+          'marker_4':((-5.503, 0.251, 0.31), (0.0, 0.0, -0.086, 0.996)),
+          'marker_5':((), ()),
+          'marker_6':(trans, rot),
+          'marker_7':(trans, rot)}
 
 def callback_alvar_message(message):
         for tag in message.markers:
