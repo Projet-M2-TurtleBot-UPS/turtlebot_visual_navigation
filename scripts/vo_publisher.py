@@ -1,5 +1,16 @@
 #! /usr/bin/env python
 
+#title           :vo_publisher.py
+#description     :This will create the visual odometry based on Ar-alvar 
+#		  readings, after conversion to odometry typed messages 
+#		  they will be published on a topic named /vo.
+#author          :Salah Eddine Ghamri
+#date            :15-03-2018
+#version         :0.2
+#usage           :python pyscript.py
+#notes           :The position of landmarks are stored here (change if needed).
+#python_version  :2.6.7  
+#==============================================================================
 import rospy
 import tf
 import geometry_msgs.msg
@@ -25,6 +36,10 @@ P_twist = np.mat(np.diag([1000000]*6))
 P_twist = np.array(P_twist).reshape(6, 6)
 
 alvar_matrices={}
+
+#dictionary for landmarks postion on the map
+
+ldmark = {}
 
 def callback_alvar_message(message):
         for tag in message.markers:
@@ -53,7 +68,7 @@ if __name__=="__main__":
 				else:
 					continue
 				# This is a well unknown tag in the map
-				listener.waitForTransform('/map', '/marker_1', now, rospy.Duration(1))
+				listener.waitForTransform('/map', '/marker_2', now, rospy.Duration(1))
 				(tran, rott) = listener.lookupTransform('/map','/marker_1', now)
 				tran_markmap = listener.fromTranslationRotation(tran,rott)
 				rospy.loginfo(tran_markmap)
