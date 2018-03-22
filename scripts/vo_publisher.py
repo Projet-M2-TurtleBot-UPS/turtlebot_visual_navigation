@@ -2,14 +2,17 @@
 
 # title           : vo_publisher.py
 # description     : This will create the visual odometry based on Ar-alvar
-# 		            readings,  after conversion to odometry typed messages
-# 		            they will be published on a topic named /vo.
+# 		readings,  after conversion to odometry typed messages
+# 		they will be published on a topic named /vo.
 # author          : Salah Eddine Ghamri
 # date            : 15-03-2018
-# version         : 0.3
-# usage           : python pyscript.py
+# version         : 0.4
+# usage           : in launcher <vo_publisher.py>
 # notes           : The position of landmarks are stored here (change if needed).
-# python_version  : 2.6.7  
+#		If Ar-alvar is not recognizing a tag "vo_publisher.py" will not
+#		publish.
+# python_version  : 2.6.7
+# System          : Ubuntu
 # ==============================================================================
 import rospy
 import tf
@@ -22,7 +25,7 @@ from ar_track_alvar_msgs.msg import AlvarMarkers
 msg = Odometry()
 
 # a handler for a publisher
-pub = rospy.Publisher('/vo',  Odometry,  queue_size=20)
+pub = rospy.Publisher('/vo',  Odometry,  queue_size=100)
 
 # frame definition
 frame_id = '/base_footprint'
@@ -30,7 +33,8 @@ frame_id = '/base_footprint'
 # transformation de tf
 transform = tf.TransformListener()
 
-# covariance matrix,  this must be determined ????
+# covariance matrix chosen variance "sqrt(0.01)",  this must be well determined.
+# "0.1" as variance means that ar_alvar is very precise.
 P = np.mat(np.diag([0.01]*6))
 P = np.array(P).reshape(6,  6)
 P_twist = np.mat(np.diag([0.01]*6))
@@ -73,13 +77,10 @@ if __name__=="__main__":
         try:
             now = rospy.Time(0)
             now_stamp = rospy.Time.now()
-            #rospy.Subscriber("/ar_pose_marker",  AlvarMarkers,  callback_alvar_message)
-            # test ------------------ 
-            Trans = (-0.435,  1,  1)
-            Rot = (-0.653,  0.750,  -0.01,  0.06)
-            matrix = transform.fromTranslationRotation(Trans,  Rot)
-            alvar_matrices["marker_"+str(0)] = matrix
-            # -----------------------
+            
+            # read alvar messages and store tags position in alvar_matrices if existed
+            rospy.Subscriber("/ar_pose_marker",  AlvarMarkers,  callback_alvar_message)
+
             if len(alvar_matrices) >= 1:
                 # here more regorous method need to be taken
                 dtctd = min(alvar_matrices.keys())
@@ -123,9 +124,7 @@ if __name__=="__main__":
             msg.twist.covariance = tuple(P_twist.ravel().tolist())
             # publishing the message
             pub.publish(msg)
+            rate.sleep()
 
         except(tf.LookupException,  tf.ConnectivityException, rospy.ROSInterruptException):
             continue
-        rate.sleep()
-
-
