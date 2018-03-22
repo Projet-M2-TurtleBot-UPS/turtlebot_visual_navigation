@@ -42,7 +42,6 @@ imu_covariance = np.diag([sigma_imu_theta**2, sigma_imu_omega**2])
 vo_covariance = np.diag([sigma_vo_x**2, sigma_vo_y**2, sigma_vo_theta**2])
 """
 # --------------------------------------------------
-n = 0
 if __name__ == "__main__":
     kalman = kalman_class.kalman_class(x, P)
     caller = kalman_class.caller()
@@ -50,35 +49,35 @@ if __name__ == "__main__":
         old_time = rospy.Time(0).now().to_sec()
         # loop while not shutdown
         while not rospy.is_shutdown():
-            # update x(k) to x(k+1)
-            # x(k+1) = f(x(k)) // P(k+1) = f(P(k))
+
+            # time step for prediction
             new_time = rospy.Time(0).now().to_sec()
             T = new_time - old_time
+
+            # predict the actual robot position
             kalman.predict(T, sigma_v, sigma_omega)
-            # rint(kalman.P)
-            # read velocity at time k+1
-            kalman.update_velocity()
-            # read time (for message)
+
+            # read time (for ros message)
             time = kalman.time_update()
 
             # read sensors
             caller.read_sensors()
-            # --> Kalman gain. --> depends on P_odom --> This only when we see.
-            # I changed covariance odom_covariance, imu_covariance, vo_covariance
-            # caller.odom_covariance, caller.imu_covariance, caller.vo_covariance
 
+            # Kalman gain calculation
             kalman.Kalman_gain(caller.odom_covariance, caller.imu_covariance, caller.vo_covariance)
 
-            # print(kalman.K)
             # Estimation, estimates and return estimation error.
             error = kalman.estimate(caller)
+
             # print(error[0],error[1],error[2])
+            print("estimated_x is %r and the odom is %r" % (kalman.estimated_x[0, 0], caller.odom_x)),
+            print("estimated_y is %r and the odom is %r" % (kalman.estimated_x[1, 0], caller.odom_x)),
+            print("estimated_theta %r and the odom is %r" % (kalman.estimated_x[2, 0], caller.odom_x))
 
             # Publish on /odom_combined
             kalman.publish_message()
             old_time = new_time
-            n += 1
-            print("I spin for %r time" % (n))
+
         rospy.spin()
 
     except rospy.ROSInterruptException:

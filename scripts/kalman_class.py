@@ -24,16 +24,18 @@ class kalman_class():
 
     def __init__(self, x, P):
 
-        self.x = np.array(x)
-        self.P = np.diag(P)
+        self.previous_x = np.array(x)
+        self.previous_P = np.diag(P)
         self.time = 0
-        self.x_prime = self.x
-        self.P_prime = self.P
+        self.estimated_x = None
+        self.estimated_P = None
+        self.predicted_x = 0 * self.previous_x
+        self.predicted_P = 0 * self.previous_P
 
         # node initialisation
         rospy.init_node("ekf_module")
+        Rate = rospy.Rate(100)
 
-        # self.S = None
         self.C = np.array([[1, 0, 0, 0, 0],
                            [0, 1, 0, 0, 0],
                            [0, 0, 1, 0, 0],
@@ -46,9 +48,9 @@ class kalman_class():
 
     def predict(self, T, sigma_v, sigma_omega):
 
-        self.x[2, 0] = self.x[2, 0] + self.x[4, 0] * T
-        # norm angle
-        self.x[2, 0] = ((self.x[2, 0] + np.pi) % (2*np.pi))-np.pi
+        self.predicted_x[2, 0] = self.previous_x[2, 0] + self.previous_x[4, 0] * T
+        # norm angle [-pi pi]
+        self.predicted_x[2, 0] = ((self.predicted_x[2, 0] + np.pi) % (2*np.pi)) - np.pi
 
         """
         # angle normalisation between pi and -pi
@@ -56,39 +58,43 @@ class kalman_class():
         self.x[2, 0] = -np.pi  + (self.x[2, 0] - np.pi)
         """
         # -------------------------------------------------------------------
-        self.x[0, 0] = self.x[0, 0] + self.x[3, 0] * T * np.cos(self.x[2, 0])
-        self.x[1, 0] = self.x[1, 0] + self.x[3, 0] * T * np.sin(self.x[2, 0])
+        self.predicted_x[0, 0] = self.previous_x[0, 0] + self.previous_x[3, 0] * T * np.cos(self.predicted_x[2, 0])
+        self.predicted_x[1, 0] = self.previous_x[1, 0] + self.previous_x[3, 0] * T * np.sin(self.predicted_x[2, 0])
+
+        self.predicted_x[3, 0] = self.previous_x[3, 0]
+        self.predicted_x[4, 0] = self.previous_x[4, 0]
 
         # d_f is the jacobian of f for u = [v, omega]'
 
-        ang = T*self.x[4, 0] + self.x[2, 0]
+        ang = T*self.previous_x[4, 0] + self.previous_x[2, 0]
         ang = ((ang + np.pi) % (2*np.pi))-np.pi
 
-        d_f = np.array([[T*np.cos(ang), (-(T**2)*self.x[3, 0]*np.sin(ang))],
-                        [T*np.sin(ang), (T**2)*self.x[3, 0]*np.cos(ang)],
+        d_f = np.array([[T*np.cos(ang), (-(T**2)*self.previous_x[3, 0]*np.sin(ang))],
+                        [T*np.sin(ang), (T**2)*self.previous_x[3, 0]*np.cos(ang)],
                         [0, T],
                         [1, 0],
                         [0, 1]])
 
         # d_f_prime is the jacobian of f for x
-        d_f_prime = np.array([[1, 0, -T*self.x[3, 0]*np.sin(ang), T*np.cos(ang), -(T**2)*self.x[3, 0]*np.sin(ang)],
-                              [0, 1, T*self.x[3, 0]*np.cos(ang), T*np.sin(ang), (T**2)*self.x[3, 0]*np.cos(ang)],
+        d_f_prime = np.array([[1, 0, -T*self.previous_x[3, 0]*np.sin(ang), T*np.cos(ang), -(T**2)*self.previous_x[3, 0]*np.sin(ang)],
+                              [0, 1, T*self.previous_x[3, 0]*np.cos(ang), T*np.sin(ang), (T**2)*self.previous_x[3, 0]*np.cos(ang)],
                               [0, 0, 1, 0, T],
                               [0, 0, 0, 1, 0],
                               [0, 0, 0, 0, 1]])
 
         var_Q = np.array([[sigma_v**2, 0], [0, sigma_omega**2]])
         Q = np.dot(d_f, np.dot(var_Q, d_f.T))
-        self.P = np.dot(d_f_prime, np.dot(self.P, d_f_prime.T)) + Q
-        print("i predicted")
+        self.predicted_P = np.dot(d_f_prime, np.dot(self.previous_P, d_f_prime.T)) + Q
+        # print("i predicted")
 
     def Kalman_gain(self, odom_covariance, imu_covariance, vo_covariance):
         # covariances here are extracted from /odom, /vo and /Imu
         # measurement in forme z = Cx + v , v is noise
         self.R = np.array(block_diag(odom_covariance, imu_covariance, vo_covariance))
-        self.S = np.dot(self.C, np.dot(self.P, self.C.T)) + self.R
-        self.K = np.dot(self.P, np.dot(self.C.T, np.linalg.inv(self.S)))
-        print("i calculated gain")
+        print(self.R)
+        self.S = np.dot(self.C, np.dot(self.predicted_P, self.C.T)) + self.R
+        self.K = np.dot(self.predicted_P, np.dot(self.C.T, np.linalg.inv(self.S)))
+        # print("i calculated gain")
 
     def estimate(self, measure):
         # calculates the error between measurement and prediction
@@ -100,32 +106,28 @@ class kalman_class():
                       [measure.odom_theta], [measure.odom_v],
                       [measure.imu_theta], [measure.imu_omega],
                       [measure.odom_x], [measure.odom_y], [measure.odom_theta]])
+        # print(z)
 
-        error = z - np.dot(self.C, self.x)
-        """
-        error[0, 0] = measure.odom_x - self.x[0, 0]
-        error[1, 0] = measure.odom_y - self.x[1, 0]
-        error[2, 0] = measure.odom_theta - self.x[2, 0]
-        """
+        # error calcualtion
+        error = z - np.dot(self.C, self.predicted_x)
+
         def nrmlz_angle(error):
             y = error
-            y[2, 0] = ((y[2, 0] + np.pi) % (2*np.pi))-np.pi
-            """
-            y = error
-            y[2, 0] = y[2, 0] % (2 * np.pi)    # force in range [0, 2 pi)
-            if y[2, 0] > np.pi:             # move to [-pi, pi)
-            y[2, 0] -= 2 * np.pi
-            """
+            y[2, 0] = ((y[2, 0] + np.pi) % (2*np.pi)) - np.pi
             return y
+
         error = nrmlz_angle(error)
-        self.x_prime = self.x + np.dot(self.K, error)
+        self.estimated_x = self.predicted_x + np.dot(self.K, error)
         # self.P = self.P - np.dot(K, np.dot(self.S, K.T))
         mat = np.eye(5, dtype=int) - np.dot(self.K, self.C)
-        self.P_prime = np.dot(mat, self.P)
-        # self.P = np.dot(mat, np.dot(self.P, mat.T)) + np.dot(self.K, np.dot(self.R, self.K.T))
-        # self.P = self.P - np.dot( self.K, np.dot(self.C, self.P))
-        print("i made estimation")
-        print(error)
+        self.estimated_P = np.dot(mat, self.predicted_P)
+        # self.P = np.dot(mat, np.dot(self.predicted_P, mat.T)) + np.dot(self.K, np.dot(self.R, self.K.T))
+        # self.P = self.predicted_P - np.dot( self.K, np.dot(self.C, self.predicted_P))
+        # print("i made estimation")
+        # previous update
+        self.previous_x = self.estimated_x
+        self.previous_P = self.estimated_P
+        self.update_velocity()
         return error
 
     def callback_velocity(self, msg):
@@ -134,8 +136,8 @@ class kalman_class():
         vy = msg.linear.y
         omega = msg.angular.z
         v = np.sqrt(vx**2 + vy**2)
-        self.x[3, 0] = v
-        self.x[4, 0] = omega
+        self.previous_x[3, 0] = v
+        self.previous_x[4, 0] = omega
 
     def update_velocity(self):
         # subscriber
@@ -146,20 +148,20 @@ class kalman_class():
         Pub = rospy.Publisher('/odom_combined', Odometry, queue_size=10)
         msg_odom = Odometry()
         # Publish kalma.x and kalman.P
-        x = self.x_prime[0, 0]
-        y = self.x_prime[1, 0]
+        x = self.estimated_x[0, 0]
+        y = self.estimated_x[1, 0]
         # we don't care for z <-- odometry
         z = 0
         # print("this is predicted", x, y)
         # extracting Quaternion from the homogeneous
-        quatern = quaternion_from_euler(0, 0, self.x_prime[2, 0])
+        quatern = quaternion_from_euler(0, 0, self.estimated_x[2, 0])
         # Constructing the message
         msg_odom.header.stamp = self.time
         msg_odom.header.frame_id = '/base_foot'
         # msg.header.child_frame_id = child_frame_id
         msg_odom.pose.pose.position = Point(x, y, z)
         msg_odom.pose.pose.orientation = Quaternion(*quatern)
-        p = np.diag([self.P_prime[0, 0], self.P_prime[1, 1], 10000000, 10000000, 1000000, self.P_prime[3, 3]])
+        p = np.diag([self.estimated_P[0, 0], self.estimated_P[1, 1], 10000000, 10000000, 1000000, self.estimated_P[3, 3]])
         msg_odom.pose.covariance = tuple(p.ravel().tolist())
         # publishing the message
         Pub.publish(msg_odom)
