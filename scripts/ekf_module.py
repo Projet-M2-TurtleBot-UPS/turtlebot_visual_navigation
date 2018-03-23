@@ -18,7 +18,7 @@ import kalman_class
 
 # node initialisation
 rospy.init_node("ekf_module")
-Rate = rospy.Rate(1) # very dangerous pay attention
+Rate = rospy.Rate(1)  # very dangerous pay attention
 
 # x is of the form [x, y, theta, v, omega]'
 x = [[0.0], [0.0], [0.0], [0.0], [0.0]]
@@ -35,31 +35,31 @@ caller = kalman_class.caller()
 
 if __name__ == "__main__":
     try:
-				old_time = rospy.Time().now().to_sec()
-				# loop while not shutdown
-				while not rospy.is_shutdown():
+        old_time = rospy.Time().now().to_sec()
+        # loop while not shutdown
+        while not rospy.is_shutdown():
 
-								# time step for prediction
-								new_time = rospy.Time().now().to_sec()
-								time = kalman.time_update() # for message
-								T = new_time - old_time
+            # time step for prediction
+            new_time = rospy.Time().now().to_sec()
+            time = kalman.time_update()  # for message
+            T = new_time - old_time
 
-								# read sensors now
-								caller.read_sensors()
+            # read sensors now
+            caller.read_sensors()
 
-								# Kalman gain calculation
-								kalman.Kalman_gain(caller.odom_covariance, caller.imu_covariance, caller.vo_covariance, caller.I_see_something)
+            # Kalman gain calculation
+            kalman.Kalman_gain(caller)
 
-								# Estimation, estimates and return estimation error.
-								error = kalman.estimate(caller)
+            # Estimation, estimates and return estimation error.
+            error = kalman.estimate(caller)
 
-								# predict the next robot position
-								kalman.predict(T, sigma_v, sigma_omega)
+            # predict the next robot position
+            kalman.predict(T, sigma_v, sigma_omega)
 
-								# Publish on /odom_combined
-								kalman.publish_message()
-								old_time = new_time
-								Rate.sleep()
+            # Publish on /odom_combined
+            kalman.publish_message()
+            old_time = new_time
+            Rate.sleep()
 
     except rospy.ROSInterruptException:
         pass

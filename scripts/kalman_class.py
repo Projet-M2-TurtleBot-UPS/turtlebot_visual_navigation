@@ -12,6 +12,7 @@
 # =====================================================================
 
 """
+
 ------prediction-----------
 predicted_x(k+1|k) = A(previous_x) previous_x(k|k) + B(previous_x) u(previous_x)
 predicted_P(k+1|k) = A(previous_x) previous_P(k|k) A(previous_x)' + G(previous_x)QG(previous_x)'
@@ -23,7 +24,8 @@ K(k) = predicted_P * C' * S^-1
 
 ------estimation------------
 estimated_x(k|k) = predicted_x + K(k+1) * error(k+1)
-estimated_P(k|k) = (I - K(k+1) * C) predicted_P  
+estimated_P(k|k) = (I - K(k+1) * C) predicted_P
+
 """
 
 import numpy as np
@@ -38,8 +40,8 @@ from geometry_msgs.msg import Twist, Point, Quaternion
 class kalman_class():
 
     def __init__(self, x, P):
-	
-	self.not_first_time = False
+
+        self.not_first_time = False
         self.previous_x = np.matrix(x)
         self.previous_P = np.diag(P)
         self.time = 0
@@ -49,38 +51,34 @@ class kalman_class():
         self.predicted_P = self.previous_P
 
         self.C_full = np.matrix([[1, 0, 0, 0, 0],
-                           [0, 1, 0, 0, 0],
-                           [0, 0, 1, 0, 0],
-                           [0, 0, 0, 1, 0],
-                           [0, 0, 1, 0, 0],
-                           [0, 0, 0, 0, 1],
-                           [1, 0, 0, 0, 0],
-                           [0, 1, 0, 0, 0],
-                           [0, 0, 1, 0, 0]])
+                                [0, 1, 0, 0, 0],
+                                [0, 0, 1, 0, 0],
+                                [0, 0, 0, 1, 0],
+                                [0, 0, 1, 0, 0],
+                                [0, 0, 0, 0, 1],
+                                [1, 0, 0, 0, 0],
+                                [0, 1, 0, 0, 0],
+                                [0, 0, 1, 0, 0]])
 
-	self.C_redu = np.matrix([[1, 0, 0, 0, 0],
-                           [0, 1, 0, 0, 0],
-                           [0, 0, 1, 0, 0],
-                           [0, 0, 0, 1, 0],
-                           [0, 0, 1, 0, 0],
-                           [0, 0, 0, 0, 1]])
-
+        self.C_redu = np.matrix([[1, 0, 0, 0, 0],
+                                [0, 1, 0, 0, 0],
+                                [0, 0, 1, 0, 0],
+                                [0, 0, 0, 1, 0],
+                                [0, 0, 1, 0, 0],
+                                [0, 0, 0, 0, 1]])
 
     def predict(self, T, sigma_v, sigma_omega):
 
-	self.predicted_x[2, 0] = self.estimated_x[2, 0] + self.estimated_x[4, 0] * T
-	# norm angle [-pi pi]------------------------------------------------
-	self.predicted_x[2, 0] = ((self.predicted_x[2, 0] + np.pi) % (2*np.pi)) - np.pi
-	# -------------------------------------------------------------------
-	self.predicted_x[0, 0] = self.estimated_x[0, 0] + self.estimated_x[3, 0] * T * np.cos(self.predicted_x[2, 0])
-	self.predicted_x[1, 0] = self.estimated_x[1, 0] + self.estimated_x[3, 0] * T * np.sin(self.predicted_x[2, 0])
-	self.predicted_x[3, 0] = self.estimated_x[3, 0]
-	self.predicted_x[4, 0] = self.estimated_x[4, 0]
-
-	
+        self.predicted_x[2, 0] = self.estimated_x[2, 0] + self.estimated_x[4, 0] * T
+        # norm angle [-pi pi]------------------------------------------------
+        self.predicted_x[2, 0] = ((self.predicted_x[2, 0] + np.pi) % (2*np.pi)) - np.pi
+        # -------------------------------------------------------------------
+        self.predicted_x[0, 0] = self.estimated_x[0, 0] + self.estimated_x[3, 0] * T * np.cos(self.predicted_x[2, 0])
+        self.predicted_x[1, 0] = self.estimated_x[1, 0] + self.estimated_x[3, 0] * T * np.sin(self.predicted_x[2, 0])
+        self.predicted_x[3, 0] = self.estimated_x[3, 0]
+        self.predicted_x[4, 0] = self.estimated_x[4, 0]
 
         # d_f is the jacobian of f for u = [v, omega]'
-	#self.previous_x = self.predicted_x
 
         ang = T*self.estimated_x[4, 0] + self.estimated_x[2, 0]
         ang = ((ang + np.pi) % (2*np.pi))-np.pi
@@ -102,45 +100,44 @@ class kalman_class():
         Q = d_f * var_Q * d_f.T
         self.predicted_P = d_f_prime * self.estimated_P * d_f_prime.T + Q
 
-	# previous update
+        # previous update
         self.previous_x = self.predicted_x
         self.previous_P = self.predicted_P
 
-    def Kalman_gain(self, odom_covariance, imu_covariance, vo_covariance, I_see_something):
-	# if we see
-	if I_see_something:
-		C = self.C_full
-		self.R = np.matrix(block_diag(odom_covariance, imu_covariance, vo_covariance))
-	else:
-		C = self.C_redu
-		self.R = np.matrix(block_diag(odom_covariance, imu_covariance))
-		
+    def Kalman_gain(self, caller_object):
+        # if we see
+        if caller_calss.I_see_something:
+            C = self.C_full
+            self.R = np.matrix(block_diag(caller_object.odom_covariance, caller_object.imu_covariance, caller_object.vo_covariance))
+        else:
+            C = self.C_redu
+            self.R = np.matrix(block_diag(caller_object.odom_covariance, caller_object.imu_covariance))
+
         # covariances here are extracted from /odom, /vo and /Imu
         # measurement in forme z = Cx + v , v is noise
         self.S = C * self.previous_P * C.T + self.R
         self.K = self.previous_P * C.T * np.linalg.inv(self.S)
 
-
-    def estimate(self, measure, I_see_something):
+    def estimate(self, measure, caller_object):
         # calculates the error between measurement and prediction
         # update x and P
         # returns error
         # changed here vo to odom
 
-	if I_see_something:
-        	z = np.matrix([[measure.odom_x], [measure.odom_y],
-                	      [measure.odom_theta], [measure.odom_v],
-			      [measure.imu_theta], [measure.imu_omega],
-                      	      [measure.vo_x], [measure.vo_y], [measure.vo_theta]])
-		C = self.C_full
-	else:
-		z = np.matrix([[measure.odom_x], [measure.odom_y],
-                      	      [measure.odom_theta], [measure.odom_v],
-                              [measure.imu_theta], [measure.imu_omega]])
-		C = self.C_redu
+        if caller_object.I_see_something:
+            z = np.matrix([[measure.odom_x], [measure.odom_y],
+                           [measure.odom_theta], [measure.odom_v],
+                           [measure.imu_theta], [measure.imu_omega],
+                           [measure.vo_x], [measure.vo_y], [measure.vo_theta]])
+            C = self.C_full
+        else:
+            z = np.matrix([[measure.odom_x], [measure.odom_y],
+                           [measure.odom_theta], [measure.odom_v],
+                           [measure.imu_theta], [measure.imu_omega]])
+            C = self.C_redu
 
-	# error calcualtion (becarfull here np matrixs)
-	error = z - (C * self.previous_x)
+        # error calcualtion (becarfull here np matrixs)
+        error = z - (C * self.previous_x)
 
         def nrmlz_angle(error):
             y = error
@@ -149,22 +146,22 @@ class kalman_class():
 
         error = nrmlz_angle(error)
 
-	# we don't estimate first time
-	if self.not_first_time:
-		self.estimated_x = self.previous_x + self.K * error
-		#print("this is ", self.estimated_x)
-		# self.P = self.P - np.dot(K, np.dot(self.S, K.T))
-		mat = np.eye(5, dtype=int) - self.K * C
-		self.estimated_P = mat * self.previous_P
-	else:
-		self.not_first_time = True
-		
+        # we don't estimate first time
+        if self.not_first_time:
+            self.estimated_x = self.previous_x + self.K * error
+            # print("this is ", self.estimated_x)
+            # self.P = self.P - np.dot(K, np.dot(self.S, K.T))
+            mat = np.eye(5, dtype=int) - self.K * C
+            self.estimated_P = mat * self.previous_P
+        else:
+            self.not_first_time = True
+
         # self.P = np.dot(mat, np.dot(self.predicted_P, mat.T)) + np.dot(self.K, np.dot(self.R, self.K.T))
         # self.P = self.predicted_P - np.dot( self.K, np.dot(self.C, self.predicted_P))
         # print("i made estimation")
 
         # print(z)
-	self.update_velocity()
+        self.update_velocity()
 
         return error
 
@@ -226,8 +223,8 @@ class caller():
         self.vo_x = None
         self.vo_y = None
         self.vo_theta = None
-	self.I_see_something = True
-	
+        self.I_see_something = False
+
     def read_sensors(self):
 
         # Odometry, Imu, Vo readings and covariances --> caller object.
@@ -247,7 +244,6 @@ class caller():
         # not first time
         self.n = 1
 
-
     def callback_odom(self, msg):
         self.odom_x = msg.pose.pose.position.x
         self.odom_y = msg.pose.pose.position.y
@@ -263,8 +259,8 @@ class caller():
         self.odom_v = np.sqrt(vx**2 + vy**2)
         pose_covariance = msg.pose.covariance
         twist_covariance = msg.twist.covariance
-	a = 0.1 # pose_covariance[35]
-	b = 0.1 #(twist_covariance[0] + twist_covariance[7])
+        a = 0.1  # pose_covariance[35]
+        b = 0.1  # (twist_covariance[0] + twist_covariance[7])
         self.odom_covariance = np.diag([pose_covariance[0],
                                         pose_covariance[7],
                                         a,
@@ -281,6 +277,7 @@ class caller():
                                        msg.angular_velocity_covariance[8]))
 
     def callback_vo(self, msg):
+        self.I_see_something = True
         # same as odometry message
         self.vo_x = msg.pose.pose.position.x
         self.vo_y = msg.pose.pose.position.y
