@@ -131,7 +131,7 @@ if __name__ == "__main__":
             msg.twist.covariance = tuple(P_twist.ravel().tolist())
 
             # publishing the message, only when distance is under 3 meters
-            if (alvar_matrices[dtctd])[3, 2] <= 3:
+            if np.abs((alvar_matrices[dtctd])[3, 2]) <= 3:
                 pub.publish(msg)
             else:
                 pass
