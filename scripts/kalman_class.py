@@ -106,7 +106,7 @@ class kalman_class():
 
     def Kalman_gain(self, caller_object):
         # if we see
-        if caller_calss.I_see_something:
+        if caller_object.I_see_something:
             C = self.C_full
             self.R = np.matrix(block_diag(caller_object.odom_covariance, caller_object.imu_covariance, caller_object.vo_covariance))
         else:
