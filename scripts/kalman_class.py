@@ -118,13 +118,13 @@ class kalman_class():
         self.S = C * self.previous_P * C.T + self.R
         self.K = self.previous_P * C.T * np.linalg.inv(self.S)
 
-    def estimate(self, measure, caller_object):
+    def estimate(self, measure):
         # calculates the error between measurement and prediction
         # update x and P
         # returns error
         # changed here vo to odom
 
-        if caller_object.I_see_something:
+        if measure.I_see_something:
             z = np.matrix([[measure.odom_x], [measure.odom_y],
                            [measure.odom_theta], [measure.odom_v],
                            [measure.imu_theta], [measure.imu_omega],
@@ -135,7 +135,8 @@ class kalman_class():
                            [measure.odom_theta], [measure.odom_v],
                            [measure.imu_theta], [measure.imu_omega]])
             C = self.C_redu
-
+        # this will return I_see_something to False
+        measure.reset_seeing()
         # error calcualtion (becarfull here np matrixs)
         error = z - (C * self.previous_x)
 
@@ -288,3 +289,6 @@ class caller():
         self.vo_covariance = np.diag([pose_covariance[0],
                                      pose_covariance[7],
                                      pose_covariance[35]])
+
+    def reset_seeing(self):
+        self.I_see_something = False
