@@ -18,15 +18,17 @@ import kalman_class
 
 # node initialisation
 rospy.init_node("ekf_module")
-Rate = rospy.Rate(1)  # very dangerous pay attention
-
+frequency = 100.00
+Rate = rospy.Rate(frequency)  # very dangerous pay attention
+t = 0
+step = 1/frequency
 # x is of the form [x, y, theta, v, omega]'
 x = [[0.0], [0.0], [0.0], [0.0], [0.0]]
 # P is covariance size(x) x size(x)
 P = [0.0, 0.0, 0.0, 0.0, 0.0]
 # variance of process noise
-sigma_v = 0.1
-sigma_omega = 0.1
+sigma_v = 10
+sigma_omega = 10
 # variance of measurement noise
 # --------------------------------------------------
 
@@ -43,23 +45,24 @@ if __name__ == "__main__":
             new_time = rospy.Time().now().to_sec()
             time = kalman.time_update()  # for message
             T = new_time - old_time
+	    T = (1/frequency)*10
+	    rospy.loginfo(T)
 
             # read sensors now
             caller.read_sensors()
 
-            # Kalman gain calculation
-            kalman.Kalman_gain(caller)
-
             # Estimation, estimates and return estimation error.
             error = kalman.estimate(caller)
-
+	    
+	    # check tags visibility 
             # predict the next robot position
             kalman.predict(T, sigma_v, sigma_omega)
 
             # Publish on /odom_combined
             kalman.publish_message()
             old_time = new_time
-            Rate.sleep()
+	    #rospy.sleep(10)
+	    Rate.sleep()
 
     except rospy.ROSInterruptException:
         pass
