@@ -129,8 +129,12 @@ if __name__ == "__main__":
             msg.pose.pose.orientation = Quaternion(*quatern)
             msg.pose.covariance = tuple(P.ravel().tolist())
             msg.twist.covariance = tuple(P_twist.ravel().tolist())
-            # publishing the message
-            pub.publish(msg)
+
+            # publishing the message, only when distance is under 3 meters
+            if (alvar_matrices[dtctd])[3, 2] <= 3:
+                pub.publish(msg)
+            else:
+                pass
             rate.sleep()
 
         except(tf.LookupException,  tf.ConnectivityException, rospy.ROSInterruptException):

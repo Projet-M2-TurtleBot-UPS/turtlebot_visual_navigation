@@ -239,8 +239,8 @@ class caller():
             rospy.wait_for_message('/mobile_base/sensors/imu_data', Imu, timeout=1)
 
         rospy.Subscriber('/vo', Odometry, self.callback_vo)
-        if self.n == 0:
-            rospy.wait_for_message('/vo', Odometry, timeout=1)
+        # if self.n == 0:
+        #    rospy.wait_for_message('/vo', Odometry, timeout=1)
 
         # not first time
         self.n = 1
