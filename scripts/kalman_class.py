@@ -36,6 +36,14 @@ from nav_msgs.msg import Odometry
 from sensor_msgs.msg import Imu
 from geometry_msgs.msg import Twist, Point, Quaternion
 
+def normalize_angle(angle):
+    """Normalize angle to [-pi, pi]"""
+    y = angle
+    y = y % (2 * np.pi)    # force in range [0, 2 pi)
+    if y > np.pi:             # move to [-pi, pi)
+        y -= 2 * np.pi
+    return y
+
 
 class kalman_class():
 
@@ -68,20 +76,28 @@ class kalman_class():
                                 [0, 0, 0, 0, 1]])
 
     def predict(self, T, sigma_v, sigma_omega):
+	"""
+	f = Matrix([[x + v * T * cos(theta + omega * T)],
+		    [y + v * T * sin(theta + omega * T)],
+		    [theta + omega * T],
+		    [v],
+		    [omega]])
+	"""
 
         self.predicted_x[2, 0] = self.estimated_x[2, 0] + self.estimated_x[4, 0] * T
-        # norm angle [-pi pi]------------------------------------------------
-        self.predicted_x[2, 0] = ((self.predicted_x[2, 0] + np.pi) % (2*np.pi)) - np.pi
-        # -------------------------------------------------------------------
+        # normalize angle [-pi pi]------------------------------------------------
+	self.predicted_x[2, 0] = normalize_angle(self.predicted_x[2, 0])
+        # ------------------------------------------------------------------------
         self.predicted_x[0, 0] = self.estimated_x[0, 0] + self.estimated_x[3, 0] * T * np.cos(self.predicted_x[2, 0])
         self.predicted_x[1, 0] = self.estimated_x[1, 0] + self.estimated_x[3, 0] * T * np.sin(self.predicted_x[2, 0])
         self.predicted_x[3, 0] = self.estimated_x[3, 0]
         self.predicted_x[4, 0] = self.estimated_x[4, 0]
 
         # d_f is the jacobian of f for u = [v, omega]'
-
         ang = T*self.estimated_x[4, 0] + self.estimated_x[2, 0]
-        ang = ((ang + np.pi) % (2*np.pi))-np.pi
+	# normalize angle [-pi pi]-----------------------------------------------
+        ang = normalize_angle(ang)
+	#------------------------------------------------------------------------
 
         d_f = np.matrix([[T*np.cos(ang), (-(T**2)*self.estimated_x[3, 0]*np.sin(ang))],
                         [T*np.sin(ang), (T**2)*self.estimated_x[3, 0]*np.cos(ang)],
@@ -104,25 +120,12 @@ class kalman_class():
         self.previous_x = self.predicted_x
         self.previous_P = self.predicted_P
 
-    def Kalman_gain(self, caller_object):
-        # if we see
-        if caller_object.I_see_something:
-            C = self.C_full
-            self.R = np.matrix(block_diag(caller_object.odom_covariance, caller_object.imu_covariance, caller_object.vo_covariance))
-        else:
-            C = self.C_redu
-            self.R = np.matrix(block_diag(caller_object.odom_covariance, caller_object.imu_covariance))
-
+    def estimate(self, measure):
         # covariances here are extracted from /odom, /vo and /Imu
         # measurement in forme z = Cx + v , v is noise
-        self.S = C * self.previous_P * C.T + self.R
-        self.K = self.previous_P * C.T * np.linalg.inv(self.S)
-
-    def estimate(self, measure):
+        # if we see
         # calculates the error between measurement and prediction
         # update x and P
-        # returns error
-        # changed here vo to odom
 
         if measure.I_see_something:
             z = np.matrix([[measure.odom_x], [measure.odom_y],
@@ -130,28 +133,33 @@ class kalman_class():
                            [measure.imu_theta], [measure.imu_omega],
                            [measure.vo_x], [measure.vo_y], [measure.vo_theta]])
             C = self.C_full
+            R = np.matrix(block_diag(measure.odom_covariance, measure.imu_covariance, measure.vo_covariance))
         else:
             z = np.matrix([[measure.odom_x], [measure.odom_y],
                            [measure.odom_theta], [measure.odom_v],
                            [measure.imu_theta], [measure.imu_omega]])
             C = self.C_redu
+            R = np.matrix(block_diag(measure.odom_covariance, measure.imu_covariance))
+
+	# Kalman gain 
+        S = C * self.previous_P * C.T + R
+        self.K = self.previous_P * C.T * np.linalg.inv(S)
+
         # this will return I_see_something to False
         measure.reset_seeing()
         # error calcualtion (becarfull here np matrixs)
         error = z - (C * self.previous_x)
-
-        def nrmlz_angle(error):
-            y = error
-            y[2, 0] = ((y[2, 0] + np.pi) % (2*np.pi)) - np.pi
-            return y
-
-        error = nrmlz_angle(error)
+	# normalize angle ------------------------------------------------
+	error[2, 0] = normalize_angle(error[2, 0])
+	#-----------------------------------------------------------------
 
         # we don't estimate first time
+	#
         if self.not_first_time:
             self.estimated_x = self.previous_x + self.K * error
-            # print("this is ", self.estimated_x)
-            # self.P = self.P - np.dot(K, np.dot(self.S, K.T))
+	    # normalize angle [-pi pi]------------------------------------
+	    self.estimated_x[2, 0] = normalize_angle(self.estimated_x[2, 0])
+	    # ------------------------------------------------------------
             mat = np.eye(5, dtype=int) - self.K * C
             self.estimated_P = mat * self.previous_P
         else:
@@ -159,11 +167,8 @@ class kalman_class():
 
         # self.P = np.dot(mat, np.dot(self.predicted_P, mat.T)) + np.dot(self.K, np.dot(self.R, self.K.T))
         # self.P = self.predicted_P - np.dot( self.K, np.dot(self.C, self.predicted_P))
-        # print("i made estimation")
 
-        # print(z)
         self.update_velocity()
-
         return error
 
     def callback_velocity(self, msg):
@@ -181,7 +186,7 @@ class kalman_class():
 
     def publish_message(self):
         # publisher
-        Pub = rospy.Publisher('/odom_combined', Odometry, queue_size=10)
+        Pub = rospy.Publisher('/odom_combined', Odometry, queue_size=100)
         msg_odom = Odometry()
         # Publish kalma.x and kalman.P
         x = self.estimated_x[0, 0]
@@ -254,7 +259,9 @@ class caller():
         quat = msg.pose.pose.orientation
         (roll, pitch, yaw) = euler_from_quaternion((quat.x, quat.y, quat.z, quat.w))
         self.odom_theta = yaw
-
+	# normalise to [0, 2pi]------------------------------
+	#self.odom_theta = self.odom_theta + np.pi
+	# ---------------------------------------------------
         vx = msg.twist.twist.linear.x
         vy = msg.twist.twist.linear.y
         self.odom_v = np.sqrt(vx**2 + vy**2)
@@ -273,6 +280,9 @@ class caller():
         # angle in [-pi, pi]
         self.imu_theta = euler_from_quaternion((quat.x, quat.y, quat.z, quat.w))[2]
 
+	# normalise to [0, 2pi]------------------------------
+	#self.imu_theta = self.imu_theta + np.pi
+	# ---------------------------------------------------
         self.imu_omega = msg.angular_velocity.z
         self.imu_covariance = np.diag((msg.orientation_covariance[8],
                                        msg.angular_velocity_covariance[8]))
@@ -285,6 +295,9 @@ class caller():
         quat = msg.pose.pose.orientation
         # angle in [-pi, pi]
         self.vo_theta = euler_from_quaternion((quat.x, quat.y, quat.z, quat.w))[2]
+	# normalise to [0, 2pi]------------------------------
+	#self.vo_theta = self.vo_theta + np.pi
+	# ---------------------------------------------------
         pose_covariance = msg.pose.covariance
         self.vo_covariance = np.diag([pose_covariance[0],
                                      pose_covariance[7],
