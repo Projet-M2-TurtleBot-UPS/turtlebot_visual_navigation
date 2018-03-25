@@ -1,31 +1,29 @@
-# module for classes
+# module for EKF_filter.py classes
 
-# title           : kalman_class.py module for classes of ekf_module.py
-# description     : This module contains all functions of ekf_module.py
+# title           : KALMAN_lib.py
+# description     : This module contains all classes of EKF_filter.py
 # author          : Salah Eddine Ghamri
 # date            : 17-03-2018
-# version         : 0.2
-# usage           : /
-# notes           :
+# version         : 0.4
+# usage           : must be in the same folder of EKF_filter.py, no need
+#                   to chmod +x this script
+# notes           : //
 # python_version  : 2.6.7
 # Platforme       : Ubuntu
 # =====================================================================
 
 """
-
-------prediction-----------
+Algorithm :
+------Prediction-----------
 predicted_x(k+1|k) = A(previous_x) previous_x(k|k) + B(previous_x) u(previous_x)
 predicted_P(k+1|k) = A(previous_x) previous_P(k|k) A(previous_x)' + G(previous_x)QG(previous_x)'
-
-------kalman---------------
-error(k) = z(k) - (C* predicted_x(k|k-1)
+------Kalman---------------
+error(k) = z(k) - (C* predicted_x(k|k-1))
 S(k) = C * predicted_P(k|k-1) * C' + R(k)
-K(k) = predicted_P * C' * S^-1
-
-------estimation------------
-estimated_x(k|k) = predicted_x + K(k+1) * error(k+1)
-estimated_P(k|k) = (I - K(k+1) * C) predicted_P
-
+K(k) = predicted_P(k|k-1) * C' * S^-1
+------Estimation------------
+estimated_x(k|k) = predicted_x(k+1|k) + K(k+1) * error(k+1)
+estimated_P(k|k) = (I - K(k+1) * C) predicted_P(k+1|k)
 """
 
 import numpy as np
@@ -60,29 +58,29 @@ class kalman_class():
         self.predicted_P = self.previous_P
 
         self.C_full = np.matrix([[1, 0, 0, 0, 0],
-                                [0, 1, 0, 0, 0],
-                                [0, 0, 1, 0, 0],
-                                [0, 0, 0, 1, 0],
-                                [0, 0, 1, 0, 0],
-                                [0, 0, 0, 0, 1],
-                                [1, 0, 0, 0, 0],
-                                [0, 1, 0, 0, 0],
-                                [0, 0, 1, 0, 0]])
+                                 [0, 1, 0, 0, 0],
+                                 [0, 0, 1, 0, 0],
+                                 [0, 0, 0, 1, 0],
+                                 [0, 0, 1, 0, 0],
+                                 [0, 0, 0, 0, 1],
+                                 [1, 0, 0, 0, 0],
+                                 [0, 1, 0, 0, 0],
+                                 [0, 0, 1, 0, 0]])
 
         self.C_redu = np.matrix([[1, 0, 0, 0, 0],
-                                [0, 1, 0, 0, 0],
-                                [0, 0, 1, 0, 0],
-                                [0, 0, 0, 1, 0],
-                                [0, 0, 1, 0, 0],
-                                [0, 0, 0, 0, 1]])
+                                 [0, 1, 0, 0, 0],
+                                 [0, 0, 1, 0, 0],
+                                 [0, 0, 0, 1, 0],
+                                 [0, 0, 1, 0, 0],
+                                 [0, 0, 0, 0, 1]])
 
     def predict(self, T, sigma_v, sigma_omega):
         """
         f = Matrix([[x + v * T * cos(theta + omega * T)],
-        [y + v * T * sin(theta + omega * T)],
-        [theta + omega * T],
-        [v],
-        [omega]])
+                    [y + v * T * sin(theta + omega * T)],
+                    [theta + omega * T],
+                    [v],
+                    [omega]])
         """
 
         self.predicted_x[2, 0] = self.estimated_x[2, 0] + self.estimated_x[4, 0] * T
@@ -117,17 +115,18 @@ class kalman_class():
         Q = d_f * var_Q * d_f.T
         self.predicted_P = d_f_prime * self.estimated_P * d_f_prime.T + Q
 
-        # previous update
+        # old state and covariance update
         self.previous_x = self.predicted_x
         self.previous_P = self.predicted_P
 
     def estimate(self, measure):
-        # covariances here are extracted from /odom, /vo and /Imu
         # measurement in forme z = Cx + v , v is noise
-        # if we see
+        # if we see the ar-tags related to the publishing in /vo
         # calculates the error between measurement and prediction
         # update x and P
 
+        # if we see we use full measurement matrix size
+        # else we use the reduced size, so /vo is neglected.
         if measure.I_see_something:
             z = np.matrix([[measure.odom_x], [measure.odom_y],
                            [measure.odom_theta], [measure.odom_v],
@@ -146,14 +145,13 @@ class kalman_class():
         S = C * self.previous_P * C.T + R
         self.K = self.previous_P * C.T * np.linalg.inv(S)
 
-        # error calcualtion (becarfull here np matrixs)
+        # error calcualtion²
         error = z - (C * self.previous_x)
         # normalize angle ------------------------------------------------
         error[2, 0] = normalize_angle(error[2, 0])
         # -----------------------------------------------------------------
 
         # we don't estimate first time
-        #
         if self.not_first_time:
             self.estimated_x = self.previous_x + self.K * error
             # normalize angle [-pi pi]------------------------------------
@@ -166,7 +164,6 @@ class kalman_class():
 
         # self.P = np.dot(mat, np.dot(self.predicted_P, mat.T)) + np.dot(self.K, np.dot(self.R, self.K.T))
         # self.P = self.predicted_P - np.dot( self.K, np.dot(self.C, self.predicted_P))
-
         self.update_velocity()
         return error
 
@@ -192,12 +189,11 @@ class kalman_class():
         y = self.estimated_x[1, 0]
         # we don't care for z <-- odometry
         z = 0
-        # print("this is predicted", x, y)
         # extracting Quaternion from the homogeneous
         quatern = quaternion_from_euler(0, 0, self.estimated_x[2, 0])
         # Constructing the message
         msg_odom.header.stamp = caller_obj.time_stamp
-        msg_odom.header.frame_id = '/base_footprint'
+        msg_odom.header.frame_id = 'base_footprint'
         # msg.header.child_frame_id = child_frame_id
         msg_odom.pose.pose.position = Point(x, y, z)
         msg_odom.pose.pose.orientation = Quaternion(*quatern)
@@ -245,18 +241,15 @@ class caller():
             self.odom_y = msg.pose.pose.position.y
             # print("this is odom", self.odom_x, self.odom_y)
             # theta is the yaw we need to use tf.transforms quater -> euler
-            # the angle the euler_from_quaternion gives is in [-pi, pi]
+            # the angle the euler_from_quaternion gives angle in [-pi, pi]
             quat = msg.pose.pose.orientation
             (roll, pitch, yaw) = euler_from_quaternion((quat.x, quat.y, quat.z, quat.w))
             self.odom_theta = yaw
-            # normalise to [0, 2pi]------------------------------
-            # self.odom_theta = self.odom_theta + np.pi
-            # ---------------------------------------------------
             vx = msg.twist.twist.linear.x
             vy = msg.twist.twist.linear.y
             self.odom_v = np.sqrt(vx**2 + vy**2)
             pose_covariance = msg.pose.covariance
-            twist_covariance = msg.twist.covariance
+            # twist_covariance = msg.twist.covariance
             a = 0.1  # pose_covariance[35]
             b = 0.1  # (twist_covariance[0] + twist_covariance[7])
             self.odom_covariance = np.diag([pose_covariance[0],
@@ -273,10 +266,6 @@ class caller():
             quat = msg.orientation
             # angle in [-pi, pi]
             self.imu_theta = euler_from_quaternion((quat.x, quat.y, quat.z, quat.w))[2]
-
-            # normalise to [0, 2pi]------------------------------
-            # self.imu_theta = self.imu_theta + np.pi
-            # ---------------------------------------------------
             self.imu_omega = msg.angular_velocity.z
             self.imu_covariance = np.diag((msg.orientation_covariance[8],
                                            msg.angular_velocity_covariance[8]))
@@ -286,16 +275,12 @@ class caller():
     def call_vo(self):
         try:
             msg = rospy.wait_for_message('/vo', Odometry, timeout=0.1)
-            self.I_see_something = True
             # same as odometry message
             self.vo_x = msg.pose.pose.position.x
             self.vo_y = msg.pose.pose.position.y
             quat = msg.pose.pose.orientation
             # angle in [-pi, pi]
             self.vo_theta = euler_from_quaternion((quat.x, quat.y, quat.z, quat.w))[2]
-            # normalise to [0, 2pi]------------------------------
-            # self.vo_theta = self.vo_theta + np.pi
-            # ---------------------------------------------------
             pose_covariance = msg.pose.covariance
             self.vo_covariance = np.diag([pose_covariance[0],
                                          pose_covariance[7],
