@@ -22,8 +22,8 @@ error(k) = z(k) - (C* predicted_x(k|k-1))
 S(k) = C * predicted_P(k|k-1) * C' + R(k)
 K(k) = predicted_P(k|k-1) * C' * S^-1
 ------Estimation------------
-estimated_x(k|k) = predicted_x(k+1|k) + K(k+1) * error(k+1)
-estimated_P(k|k) = (I - K(k+1) * C) predicted_P(k+1|k)
+estimated_x(k|k) = predicted_x(k|k-1) + K(k) * error(k)
+estimated_P(k|k) = (I - K(k) * C) predicted_P(k|k-1)
 """
 
 import numpy as np
@@ -120,9 +120,9 @@ class kalman_class():
         self.previous_P = self.predicted_P
 
     def estimate(self, measure):
-        # measurement in forme z = Cx + v , v is noise
-        # if we see the ar-tags related to the publishing in /vo
-        # calculates the error between measurement and prediction
+        # measurement in form z = Cx + v , v is white noise
+        # in case we see the ar-tags (related to the publishing in /vo)
+        # it calculates the error between measurement and prediction
         # update x and P
 
         # if we see we use full measurement matrix size
@@ -145,7 +145,7 @@ class kalman_class():
         S = C * self.previous_P * C.T + R
         self.K = self.previous_P * C.T * np.linalg.inv(S)
 
-        # error calcualtion²
+        # error calcualtion
         error = z - (C * self.previous_x)
         # normalize angle ------------------------------------------------
         error[2, 0] = normalize_angle(error[2, 0])
@@ -162,6 +162,7 @@ class kalman_class():
         else:
             self.not_first_time = True
 
+        # other ways to calculate innovation covarience
         # self.P = np.dot(mat, np.dot(self.predicted_P, mat.T)) + np.dot(self.K, np.dot(self.R, self.K.T))
         # self.P = self.predicted_P - np.dot( self.K, np.dot(self.C, self.predicted_P))
         self.update_velocity()
@@ -177,7 +178,7 @@ class kalman_class():
         self.estimated_x[4, 0] = omega
 
     def update_velocity(self):
-        # subscriber
+        # subscriber in control commands topic
         rospy.Subscriber('/mobile_base/commands/velocity', Twist, self.callback_velocity)
 
     def publish_message(self, caller_obj):
@@ -201,10 +202,6 @@ class kalman_class():
         msg_odom.pose.covariance = tuple(p.ravel().tolist())
         # publishing the message
         Pub.publish(msg_odom)
-
-    def time_update(self):
-        # read time (for message)
-        self.time = rospy.Time.now()
 
 
 class caller():
@@ -239,9 +236,8 @@ class caller():
             self.time_stamp = msg.header.stamp
             self.odom_x = msg.pose.pose.position.x
             self.odom_y = msg.pose.pose.position.y
-            # print("this is odom", self.odom_x, self.odom_y)
             # theta is the yaw we need to use tf.transforms quater -> euler
-            # the angle the euler_from_quaternion gives angle in [-pi, pi]
+            # the euler_from_quaternion gives angle in [-pi, pi]
             quat = msg.pose.pose.orientation
             (roll, pitch, yaw) = euler_from_quaternion((quat.x, quat.y, quat.z, quat.w))
             self.odom_theta = yaw
@@ -249,9 +245,9 @@ class caller():
             vy = msg.twist.twist.linear.y
             self.odom_v = np.sqrt(vx**2 + vy**2)
             pose_covariance = msg.pose.covariance
-            # twist_covariance = msg.twist.covariance
-            a = 0.1  # pose_covariance[35]
-            b = 0.1  # (twist_covariance[0] + twist_covariance[7])
+            twist_covariance = msg.twist.covariance
+            a = pose_covariance[35]
+            b = twist_covariance[0] + twist_covariance[7]
             self.odom_covariance = np.diag([pose_covariance[0],
                                             pose_covariance[7],
                                             a,

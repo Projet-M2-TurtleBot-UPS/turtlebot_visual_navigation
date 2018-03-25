@@ -6,7 +6,8 @@
 # author          : Salah Eddine Ghamri
 # date            : 17-03-2018
 # version         : 0.5
-# usage           : must be run in navigation.launch
+# usage           : in Roslaunch file add:
+#                   <node name="EKF_filter" pkg="package_name" type="EKF_filter.py" output="screen">
 # notes           : Rate affects response
 # python_version  : 2.6.7
 # ==================================================================================
@@ -16,8 +17,8 @@ import KALMAN_lib
 
 # initialisation------------------------------------
 # node initialisation
-rospy.init_node("EKF_filter")
-frequency = 200.00
+rospy.init_node('EKF_filter')
+frequency = 200.00  # it depends
 Rate = rospy.Rate(frequency)  # very dangerous pay attention
 
 # x is of the form [x, y, theta, v, omega]'---------
@@ -27,7 +28,8 @@ P = [0.0, 0.0, 0.0, 0.0, 0.0]
 # variance of process noise
 sigma_v = 0.1
 sigma_omega = 0.1
-# variance of measurement noise
+# variance of measurement noise must be declared in
+# "R" in KALMAN_lib.estimate() if needed.
 # --------------------------------------------------
 
 kalman = KALMAN_lib.kalman_class(x, P)
