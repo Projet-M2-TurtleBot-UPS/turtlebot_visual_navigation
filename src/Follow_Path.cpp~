@@ -1,8 +1,8 @@
 /***********************************************************************/
-/*                           Follow_Path.cpp                           */
+/*                             Target.cpp                              */
 /***********************************************************************/
 /* -VERSION: ROS_Ubuntu 14.04                                          */
-/* -AUTHOR:  RUBIO Luc                                                 */
+/* -AUTHOR:  GUILLAUME Sylvain                                         */
 /* -LAST_MODIFICATION: 03/2018                                         */
 /***********************************************************************/
 
@@ -41,8 +41,7 @@ Follow_Path::Follow_Path(ros::NodeHandle nh)
 	is_Obstacle = false;
 }
 
-// Callback of the /odom topic
-// Gets the odometry informations and calculates the Euler angle from Quaternion informations
+
 void Follow_Path::CallBack_Odom(const nav_msgs::Odometry::ConstPtr& msg)
 {
 	Robot_pose_[0]= msg->pose.pose.position.x;
@@ -101,8 +100,6 @@ void Follow_Path::Callback_obstacle(const sensor_msgs::ImageConstPtr& msg) {
   }
 }
 
-
-
 // GetPointCloud
 // Returns the point cloud we built
 vector<vector<float> > Follow_Path::getPointCloud() {
@@ -111,11 +108,6 @@ vector<vector<float> > Follow_Path::getPointCloud() {
 }
 
 
-
-// Send_MSG_Velocity
-// Publish the linear and angular speeds to make the TurtleBot move
-// linear: the linear speed
-// angular: the angular speed
 void Follow_Path::send_MSG_Velocity (float linear, float angular)
 {
 	geometry_msgs::Twist msg;
@@ -125,11 +117,6 @@ void Follow_Path::send_MSG_Velocity (float linear, float angular)
 }
 
 
-
-// Vector_AB
-// Returns the vector from point A to point B
-// a: vector containing the position (x,y,z) of point A
-// b: vector containing the position (x,y,z) of point B
 vector<float> Follow_Path::vector_AB (vector<float> a, vector<float> b)
 {
 	vector<float> vec;
@@ -139,9 +126,6 @@ vector<float> Follow_Path::vector_AB (vector<float> a, vector<float> b)
 	return vec;
 }
 
-
-// Vector_vision
-// Returns the vector containing the information of robot orientation
 vector<float> Follow_Path::vector_vision()
 {
 	//vector Xrobot/world = Rz * (1,0,0)t 
@@ -157,11 +141,6 @@ vector<float> Follow_Path::vector_vision()
 	return vision;
 }
 
-
-// Distance
-// Returns the euclidian distance between two vectors
-// p1: the first vector
-// p2: the second vector
 float Follow_Path::distance (vector<float> p1, vector<float> p2)
 {
 	float diff_x=(p1[0]-p2[0]);
@@ -171,10 +150,6 @@ float Follow_Path::distance (vector<float> p1, vector<float> p2)
 	return dist;
 }
 
-
-// Normalized_2D
-// Normalizes a 2D vector
-// vec: the vector to normalize
 vector<float> Follow_Path::normalized_2D (vector<float> vec)
 {
 	float xx=(vec[0]*vec[0]);
@@ -188,11 +163,6 @@ vector<float> Follow_Path::normalized_2D (vector<float> vec)
 	return res;
 }
 
-
-// Dot_2D
-// Return the dot from two vector in a 2D environment
-// vec1: the first vector
-// vec2: the second vector
 float Follow_Path::dot_2D (vector<float> vec1, vector<float> vec2)
 {
 	vector<float> normV1 = normalized_2D(vec1);
@@ -201,11 +171,6 @@ float Follow_Path::dot_2D (vector<float> vec1, vector<float> vec2)
 	return norm;
 }
 
-
-// Determinant_2D
-// Return the determinant between two vector in a 2D environment
-// vec1: the first vector
-// vec2: the second vector
 float Follow_Path::determinant_2D (vector<float> vec1, vector<float> vec2)
 {
 	vector<float> normV1 = normalized_2D(vec1);
@@ -215,10 +180,7 @@ float Follow_Path::determinant_2D (vector<float> vec1, vector<float> vec2)
 }
 
 
-// Calculate_angle
-// Return the angle between two vector in a 2D environment
-// u: the first vector
-// v: the second vector
+
 float Follow_Path::calculate_angle (vector<float> u1, vector<float> v1)
 {
 	float det = determinant_2D(u1,v1);
@@ -308,7 +270,7 @@ bool Follow_Path::correction_Angles(vector<float> goal)
 		if(alpha<0.006 && alpha>-0.006)
 			return(is_Obstacle);
 
-		angular = alpha*RATIO_ANGULAR+0.2*(alpha/abs(alpha));
+		angular = alpha*RATIO_ANGULAR+0.2*(alpha/abs(alpha);
 
 		linear = 0.0f;
 		send_MSG_Velocity(linear,angular);

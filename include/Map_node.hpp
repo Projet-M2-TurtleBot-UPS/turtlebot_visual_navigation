@@ -28,6 +28,7 @@ class Map_node
 		std::vector<float> orientation_;	//(x,y,z,w) in rad
 		std::vector<int> map_data_;			//(pixel)
 		std::string frame_id_;				//frame's id
+		bool read_;
 
 	public:
 
@@ -53,6 +54,7 @@ class Map_node
 		void dilate_Map();
 		void open_Map(int size_filter);
 		void close_Map(int size_filter);
+		void Add_obstacle(vector<vector<float> > list_point);
 
 		// Getter
 		int get_Width_Map();

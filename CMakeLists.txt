@@ -141,23 +141,42 @@ include_directories(
 ## either from message generation or dynamic reconfigure
 
 ## Declare a C++ executable
-add_executable(Navigation  src/Map_Main.cpp src/Toolbox.cpp src/Line.cpp src/Target.cpp src/Map_node.cpp src/Map_Gui.cpp src/Image_processing.cpp src/Point_Cloud src/Graph.cpp src/Smooth_Path.cpp src/Set_Marker.cpp src/Recherche.cpp src/Follow_Path.cpp)
+add_executable(Navigation  src/Map_Main.cpp src/Toolbox.cpp src/Line.cpp src/Target.cpp src/Map_node.cpp src/Map_Gui.cpp src/Image_processing.cpp src/Point_Cloud src/Graph.cpp src/Smooth_Path.cpp src/Set_Marker.cpp src/Bumper.cpp src/Recherche_Main.cpp src/Recherche.cpp src/Follow_Path.cpp src/Goal.cpp src/Set_Start_Point.cpp src/Location.cpp)
 
+add_executable(Location src/localisation_broadcaster_node.cpp)
+
+add_executable(Vo_broadcast src/Vo_Broadcast.cpp src/Target.cpp src/Set_Marker.cpp)
+
+add_executable(NewOdom src/NewOdom.cpp)
 
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 add_dependencies(Navigation ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-
+add_dependencies(Location ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(Vo_broadcast ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(NewOdom ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 
 ## Specify libraries to link a library or executable target against
-# target_link_libraries(turtlebot_proj_nav_node
-#   ${catkin_LIBRARIES}
-# )
+
 target_link_libraries(Navigation -g
   ${catkin_LIBRARIES}
 )
+
+target_link_libraries(Location -g
+  ${catkin_LIBRARIES}
+)
+
+target_link_libraries(Vo_broadcast -g
+  ${catkin_LIBRARIES}
+)
+
+target_link_libraries(NewOdom -g
+  ${catkin_LIBRARIES}
+)
+
+
 
 
 #############

@@ -108,7 +108,7 @@
 
 //Setter
 	void Target::set_Id_Failure(){id_ = -1;}
-	void Target::set_Id(int id){id_=id;};
+	void Target::set_Id(int id){id_=id};
 	void Target::set_Position (vector<float> pos){position_=pos;}
 	void Target::set_Orientation (vector<float> orien){orientation_=orien;}
 	void Target::set_Color (vector<float> color){color_=color;}

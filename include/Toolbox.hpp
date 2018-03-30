@@ -27,17 +27,11 @@ class Toolbox
 		//Operator
 
 		vector<float> vector_AB(vector<float> a, vector<float> b);
-
 		vector<float> vector_vision(float angle);
-
 		float distance(vector<float> p1, vector<float> p2);
-
 		vector<float> normalized_2D(vector<float> vec);
-
 		float dot_2D(vector<float> vec1, vector<float> vec2);
-
 		float determinant_2D(vector<float> vec1, vector<float> vec2);
-
 		float calculate_angle(vector<float> u, vector<float> v);
 
 };

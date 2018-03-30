@@ -138,8 +138,7 @@ int Map_Gui::add_List_Target (int id, vector<Target> list)
 	marker.id = id;
 	marker.type = visualization_msgs::Marker::CUBE_LIST;
 	marker.action = visualization_msgs::Marker::ADD;
-	//marker.pose.position.x = 0.0f;
-	//marker.pose.position.y = 0.0f;
+
 	marker.pose.position.z = 0.2f;
 	marker.pose.orientation.x = 0;
 	marker.pose.orientation.y = 0;
@@ -188,6 +187,9 @@ int Map_Gui::add_List_Target (int id, vector<Target> list)
 	return 0;
 }
 
+
+//Add_Line
+//add a line on map between two traget.
 int Map_Gui::add_Line (int id,Target start, Target end, vector<float> color)
 {
 	visualization_msgs::Marker marker;
@@ -233,7 +235,8 @@ int Map_Gui::add_Line (int id,Target start, Target end, vector<float> color)
 	}
 }
 
-
+//Add_Line
+//add a line on map.
 int Map_Gui::add_Line (int id,vector<float> start, vector<float> end, vector<float> color)
 {
 	visualization_msgs::Marker marker;
@@ -277,9 +280,8 @@ int Map_Gui::add_Line (int id,vector<float> start, vector<float> end, vector<flo
 	}
 }
 
-//Add_Line_Strip
+//Add_Line_List_float
 //add a list object of type line on map.
-//
 int Map_Gui::add_Line_List_float (int id, vector<vector<float> > list_pos, vector<float> color_RGBA)
 {
 	//Init MSG
@@ -349,9 +351,8 @@ int Map_Gui::add_Line_List_float (int id, vector<vector<float> > list_pos, vecto
 }
 
 
-//Add_Line_Strip
+//Add_Line_List
 //add a list object of type line on map.
-//
 int Map_Gui::add_Line_List (int id, vector<Target> list_Target, vector<float> color_RGBA)
 {
 	//Init MSG
@@ -406,6 +407,123 @@ int Map_Gui::add_Line_List (int id, vector<Target> list_Target, vector<float> co
 		marker.points.push_back(p);
 
 		marker.colors.push_back(c);
+	}
+
+	marker.lifetime = ros::Duration();
+
+	//Send msg
+	int i =0;
+	while(i<2)
+	{
+		vis_pub.publish( marker );
+		ros::Duration(0.1).sleep();
+		i++;
+	}
+
+	return 0;
+}
+
+
+//Add_Elipse_Conf
+//add a elipse object on map.
+int Map_Gui::add_Elipse_Conf (int id, vector<float> pos, vector<float> orien, vector<float> scale)
+{
+	//Init MSG
+	visualization_msgs::Marker marker;
+	marker.header.frame_id = "/map";
+	marker.header.stamp = ros::Time::now();
+	marker.ns = "Elipse";
+	marker.id = id;
+	marker.type = visualization_msgs::Marker::CYLINDER;
+	marker.action = visualization_msgs::Marker::ADD;
+
+	marker.scale.x = scale[0];
+	marker.scale.y = scale[1];
+	marker.scale.z = 0.01;
+
+	marker.pose.orientation.x = orien[0];
+	marker.pose.orientation.y = orien[1];
+	marker.pose.orientation.z = orien[2];
+	marker.pose.orientation.w = orien[3];
+
+	marker.color.a = 0.6; // Don't forget to set the alpha!
+	marker.color.r = 1.0;
+	marker.color.g = 1.0;
+	marker.color.b = 0.20;
+
+	marker.pose.position.x = pos[0];
+	marker.pose.position.y = pos[1];
+	marker.pose.position.z = 0.15;
+
+	marker.lifetime = ros::Duration();
+
+	//Send msg
+	int i =0;
+	while(i<2)
+	{
+		vis_pub.publish( marker );
+		ros::Duration(0.05).sleep();
+		i++;
+	}
+	return 0;
+}
+
+
+//Add_cone_visibility 
+//add a cone object on map.
+int Map_Gui::add_cone_visibility (int id,float theta,float angles,vector<float> pose,float distance)
+{
+	//Init MSG
+	visualization_msgs::Marker marker;
+	marker.header.frame_id = "/map";
+	marker.header.stamp = ros::Time::now();
+	marker.ns = "Visibility_Cone";
+	marker.id = id;
+	marker.type = visualization_msgs::Marker::LINE_LIST;
+	marker.action = visualization_msgs::Marker::ADD;
+	marker.scale.x = 0.1;
+	marker.scale.y = SCALE_Y_LINE;
+	marker.scale.z = SCALE_Z_LINE;
+	marker.pose.orientation.x = 0.0f;
+	marker.pose.orientation.y = 0.0f;
+	marker.pose.orientation.z = 0.0f;
+	marker.pose.orientation.w = 1.0f;
+
+	marker.color.a = 0.2; // Don't forget to set the alpha!
+	marker.color.r = 0.8;
+	marker.color.g = 0.8;
+	marker.color.b = 0.3;
+
+	std_msgs::ColorRGBA c;
+	c.r= 1.0;
+	c.g= 1.0;
+	c.b= 0.3;
+	c.a= 0.2;
+
+	int nb_lines = (angles*2)/0.05;
+	float alpha=angles::normalize_angle(theta-angles);
+
+	for(int j=0;j<nb_lines;j++)
+	{
+
+		geometry_msgs::Point pprev;
+		pprev.x= pose[0];
+		pprev.y= pose[1];
+		pprev.z= 0.02;
+
+		marker.points.push_back(pprev);
+
+		marker.colors.push_back(c);
+
+		geometry_msgs::Point p;
+		p.x= cos(alpha)*distance+pose[0];
+		p.y= sin(alpha)*distance+pose[1];
+		p.z= 0.02;
+
+		marker.points.push_back(p);
+
+		marker.colors.push_back(c);
+		alpha=angles::normalize_angle(alpha +0.05);
 	}
 
 	marker.lifetime = ros::Duration();

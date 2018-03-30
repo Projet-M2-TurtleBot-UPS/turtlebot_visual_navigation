@@ -37,6 +37,7 @@ class Set_Marker
 
 		//Operator
 		vector<Target> init_Markers();
+		vector<Target> init_ARcode_pose();
 
 		//Getter
 

@@ -88,12 +88,12 @@ static vector<vector<float> > Double_Handle(vector<float> a, vector<float> b, ve
 	diff_x=(a[0]-b[0]);
 	diff_y=(a[1]-b[1]);
 	diff_z=(a[2]-b[2]);
-	float distAB= sqrt(diff_x*diff_x + diff_y*diff_y + diff_z*diff_z)/6.0f;
+	float distAB= sqrt(diff_x*diff_x + diff_y*diff_y + diff_z*diff_z)/5.0f;
 	
 	diff_x=(b[0]-c[0]);
 	diff_y=(b[1]-c[1]);
 	diff_z=(b[2]-c[2]);
-	float distBC = sqrt(diff_x*diff_x + diff_y*diff_y + diff_z*diff_z)/6.0f;
+	float distBC = sqrt(diff_x*diff_x + diff_y*diff_y + diff_z*diff_z)/5.0f;
 
 
 	handle[0] = b[0] + distAB * (dir_x);

@@ -13,8 +13,8 @@
 #include "visualization_msgs/Marker.h"
 #include <fstream>
 
-# define SCALE_X_TARGET 0.2	    // length of the target on RVIZ
-# define SCALE_Y_TARGET 0.2	    // width of the target on RVIZ
+# define SCALE_X_TARGET 0.2	// length of the target on RVIZ
+# define SCALE_Y_TARGET 0.2	// width of the target on RVIZ
 # define SCALE_Z_TARGET 0.02	// height of the target on RVIZ
 
 using namespace std;
@@ -29,7 +29,7 @@ class Target
 		vector<float> position_;	// Target's position in x, y and z (in m)
 		vector<float> orientation_;	// Target's orientation in x, y, z and w (in rad)
 		vector<float> color_;		// Target's color in RGB ([0.0 .. 1.0])
-		vector<int> sons_;		    // Target's sons in the graph
+		vector<int> sons_;		// Target's sons in the graph
 
 	public:
 

@@ -87,7 +87,6 @@ class Follow_Path
 		bool goToPoint(vector<float> goal);
         bool correction_Angles(vector<float> goal);
         bool correction_Dist(vector<float> goal);
-        void turn_Over();
 		
 		// Getter
         vector<vector<float> > getPointCloud();

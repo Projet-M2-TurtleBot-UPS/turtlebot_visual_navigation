@@ -24,7 +24,7 @@
 #define SEUIL_LIN_MIN 3.0            // m       // Treshold where robot linear speed must be minimal
 #define SEUIL_ANG_MAX 0.1            // m       // Treshold used to decrease angular speed
 #define SEUIL_ANG_MIN 0.02           // m       // Treshold where robot angular speed must be minimal
-#define SEUIL_CRIT 1.5               // m       // Critical trashold to reach the amer (we must not go closer)
+#define SEUIL_CRIT 0.6               // m       // Critical trashold to reach the amer (we must not go closer)
 #define BASE_ROBOT 0.075             // m       // Camera - Robot center distance
 #define ETAT_RECHERCHE 0                        // State in which the robot is looking for an amer
 #define ETAT_ASSERVISSEMENT 1                   // State in which the robot is moving towards an amer

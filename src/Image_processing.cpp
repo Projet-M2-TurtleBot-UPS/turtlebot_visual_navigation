@@ -46,7 +46,6 @@ vector<int> erode_with_Filter_square (const vector<int> map, const vector<int> f
 
 	for(unsigned int i=0;i<height_map;++i)
 	{
-		//ROS_INFO("load %d/%d",i,height_map);
 		for(unsigned int j =0;j<width_map;++j)
 		{
 			data_res[((i*width_map)+j)] = map[((i*width_map)+j)];
@@ -112,7 +111,6 @@ vector<int> dilate_with_Filter_square (const vector<int> map, const vector<int> 
 
 	for(unsigned int i=0;i<height_map;++i)
 	{
-		//ROS_INFO("load %d/%d",i,height_map);
 		for(unsigned int j =0;j<width_map;++j)
 		{
 			data_res[((i*width_map)+j)] = map[((i*width_map)+j)];
